@@ -4,7 +4,7 @@ import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
 export class DevLoginDto {
   @ApiProperty({ example: 'developer@example.com' })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiPropertyOptional({ example: 'Test User' })
   @IsOptional()

@@ -14,5 +14,5 @@ export class CreateApplicationDto {
 
   @ApiProperty({ description: 'Application form data as JSON object' })
   @IsObject()
-  applicationData: Record<string, unknown>;
+  applicationData!: Record<string, unknown>;
 }

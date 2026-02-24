@@ -1,13 +1,13 @@
-﻿// This is your Prisma schema file,
+// This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["partialIndexes", "driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // Enums
@@ -121,11 +121,11 @@ model VatApplication {
   createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt             DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  applicant          User?                 @relation(fields: [applicantId], references: [id], onDelete: SetNull)
-  organisation       Organisation?         @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  applicant            User?                 @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  organisation         Organisation?         @relation(fields: [organisationId], references: [id], onDelete: SetNull)
   obligationAssessment ObligationAssessment? @relation(fields: [obligationAssessmentId], references: [id], onDelete: SetNull)
-  documents          Document[]
-  submission         Submission?
+  documents            Document[]
+  submission           Submission?
 
   @@index([status], map: "idx_vat_app_status")
   @@index([organisationId], map: "idx_vat_app_org")
@@ -165,8 +165,8 @@ model AuditEvent {
 }
 
 model Role {
-  id          Int    @id @default(autoincrement())
-  name        String @unique
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
   description String?
 
   userRoles UserRole[]
@@ -186,13 +186,13 @@ model UserRole {
 }
 
 model IdempotencyKey {
-  id             BigInt    @id @default(autoincrement())
-  idempotencyKey String    @map("idempotency_key")
-  route          String
-  ownerId        String?   @map("owner_id") @db.Uuid
-  requestHash    String?   @map("request_hash")
-  responsePayload Json?    @map("response_payload")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  id              BigInt    @id @default(autoincrement())
+  idempotencyKey  String    @map("idempotency_key")
+  route           String
+  ownerId         String?   @map("owner_id") @db.Uuid
+  requestHash     String?   @map("request_hash")
+  responsePayload Json?     @map("response_payload")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
   owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
 
@@ -213,22 +213,22 @@ model EventLog {
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
   @@index([aggregateType, aggregateId], map: "idx_event_log_aggregate")
-  @@index([processed], map: "idx_event_log_processed", where: "processed = false")
+  @@index([processed], map: "idx_event_log_processed", where: { processed: false })
   @@map("event_log")
 }
 
 model Submission {
-  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationId    String?          @unique @map("application_id") @db.Uuid
-  payload          Json?
-  status           SubmissionStatus @default(queued)
-  attempts         Int              @default(0)
-  externalReference String?         @map("external_reference")
-  lastError        String?          @map("last_error")
-  queuedAt         DateTime         @default(now()) @map("queued_at") @db.Timestamptz()
-  lastAttemptAt    DateTime?        @map("last_attempt_at") @db.Timestamptz()
-  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId     String?          @unique @map("application_id") @db.Uuid
+  payload           Json?
+  status            SubmissionStatus @default(queued)
+  attempts          Int              @default(0)
+  externalReference String?          @map("external_reference")
+  lastError         String?          @map("last_error")
+  queuedAt          DateTime         @default(now()) @map("queued_at") @db.Timestamptz()
+  lastAttemptAt     DateTime?        @map("last_attempt_at") @db.Timestamptz()
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
   application VatApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
@@ -237,27 +237,27 @@ model Submission {
 }
 
 model Filing {
-  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  taxpayerId String?       @map("taxpayer_id") @db.Uuid
-  period    String
-  payload   Json
-  status    FilingStatus   @default(pending)
-  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taxpayerId String?      @map("taxpayer_id") @db.Uuid
+  period     String
+  payload    Json
+  status     FilingStatus @default(pending)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  taxpayer  Organisation? @relation(fields: [taxpayerId], references: [id], onDelete: SetNull)
+  taxpayer   Organisation? @relation(fields: [taxpayerId], references: [id], onDelete: SetNull)
   amendments Amendment[]
-  claims    Claim[] @relation("FileIdRelation")
+  claims     Claim[]       @relation("FileIdRelation")
 
   @@map("filings")
 }
 
 model Amendment {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  filingId        String    @map("filing_id") @db.Uuid
-  amendmentData   Json?
-  status          String?
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  filingId      String   @map("filing_id") @db.Uuid
+  amendmentData Json?
+  status        String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
   filing Filing @relation(fields: [filingId], references: [id], onDelete: Cascade)
 
@@ -265,30 +265,30 @@ model Amendment {
 }
 
 model Claim {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  filingId          String?   @map("filing_id") @db.Uuid
-  taxpayerId        String?   @map("taxpayer_id") @db.Uuid
-  amount            Decimal   @db.Numeric(14, 2)
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  filingId          String?  @map("filing_id") @db.Uuid
+  taxpayerId        String?  @map("taxpayer_id") @db.Uuid
+  amount            Decimal
   reason            String?
   status            String?
-  externalReference String?   @map("external_reference")
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  externalReference String?  @map("external_reference")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  filing   Filing?        @relation("FileIdRelation", fields: [filingId], references: [id], onDelete: SetNull)
+  filing   Filing?       @relation("FileIdRelation", fields: [filingId], references: [id], onDelete: SetNull)
   taxpayer Organisation? @relation(fields: [taxpayerId], references: [id], onDelete: SetNull)
 
   @@map("claims")
 }
 
 model WorkflowInstance {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  workflowType  String    @map("workflow_type")
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workflowType  String   @map("workflow_type")
   state         Json?
   status        String?
-  correlationId String?   @map("correlation_id") @db.Uuid
-  startedAt     DateTime  @default(now()) @map("started_at") @db.Timestamptz()
-  lastUpdated   DateTime  @default(now()) @updatedAt @map("last_updated") @db.Timestamptz()
+  correlationId String?  @map("correlation_id") @db.Uuid
+  startedAt     DateTime @default(now()) @map("started_at") @db.Timestamptz()
+  lastUpdated   DateTime @default(now()) @updatedAt @map("last_updated") @db.Timestamptz()
 
   @@index([correlationId], map: "idx_workflow_correlation")
   @@map("workflow_instances")

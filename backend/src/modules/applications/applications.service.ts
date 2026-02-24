@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
-import { ApplicationStatus, ObligationAssessmentStatus } from '@prisma/client';
+import { ApplicationStatus, ObligationAssessmentStatus, Prisma } from '@prisma/client';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { AssessObligationDto } from './dto/assess-obligation.dto';
@@ -20,7 +20,7 @@ export class ApplicationsService {
         applicantId: userId,
         organisationId: dto.organisationId ?? null,
         obligationAssessmentId: dto.obligationAssessmentId ?? null,
-        applicationData: dto.applicationData,
+        applicationData: dto.applicationData as Prisma.InputJsonValue,
         status: ApplicationStatus.draft,
       },
       include: { organisation: true, obligationAssessment: true },
@@ -51,7 +51,7 @@ export class ApplicationsService {
     return this.prisma.vatApplication.update({
       where: { id },
       data: {
-        applicationData: dto.applicationData ?? app.applicationData,
+        applicationData: (dto.applicationData ?? app.applicationData) as unknown as Prisma.InputJsonValue,
         version: { increment: 1 },
       },
     });
@@ -68,7 +68,7 @@ export class ApplicationsService {
     const assessment = await this.prisma.obligationAssessment.create({
       data: {
         organisationId: app.organisationId,
-        assessmentData: dto.assessmentData,
+        assessmentData: dto.assessmentData as Prisma.InputJsonValue,
         status: ObligationAssessmentStatus.completed,
         obligationRequired: true,
         legalCitations: [],

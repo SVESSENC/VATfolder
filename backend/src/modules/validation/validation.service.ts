@@ -5,10 +5,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
-import { ApplicationStatus } from '@prisma/client';
+import { ApplicationStatus, Prisma } from '@prisma/client';
 import { ValidateApplicationDto } from './dto/validate-application.dto';
 
-interface ValidationIssue {
+export interface ValidationIssue {
   field: string;
   message: string;
   severity: 'error' | 'warning';
@@ -123,7 +123,7 @@ export class ValidationService {
       where: { id: applicationId },
       data: {
         status: newStatus,
-        validationWarnings: warnings,
+        validationWarnings: warnings as unknown as Prisma.InputJsonValue,
       },
     });
 

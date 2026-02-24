@@ -1,3 +1,4 @@
+import 'dotenv/config'; // must be first — loads .env before any module initializes
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';

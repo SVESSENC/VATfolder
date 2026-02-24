@@ -5,11 +5,11 @@ export class InitiateUploadDto {
   @ApiProperty({ description: 'Original filename', example: 'registration-form.pdf' })
   @IsString()
   @MaxLength(255)
-  filename: string;
+  filename!: string;
 
   @ApiProperty({ description: 'MIME content type', example: 'application/pdf' })
   @IsString()
-  contentType: string;
+  contentType!: string;
 
   @ApiPropertyOptional({ description: 'SHA-256 checksum of the file for integrity verification' })
   @IsOptional()
