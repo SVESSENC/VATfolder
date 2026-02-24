@@ -1,0 +1,136 @@
+openapi: 3.0.3
+info:
+  title: VAT Registration API
+  version: 0.1.0
+  description: OpenAPI skeleton for VAT registration service (create + submit application)
+servers:
+  - url: https://api.example.local
+    description: Local dev / sandbox
+
+paths:
+  /applications:
+    post:
+      summary: Create a VAT registration application (draft/validate)
+      tags:
+        - applications
+      security:
+        - mitid: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VATApplicationCreate'
+            example:
+              applicantId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+              organisation:
+                cvr: "12345678"
+                name: "ACME A/S"
+              applicationData:
+                registrationType: "standard"
+                startDate: "2026-03-01"
+                schemes:
+                  - "oss"
+                contact:
+                  phone: "+45 12 34 56 78"
+                  email: "info@acme.example"
+      responses:
+        '201':
+          description: Application created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VATApplicationResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /applications/{applicationId}:
+    get:
+      summary: Get application by id
+      tags:
+        - applications
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VATApplicationResponse'
+        '404':
+          description: Not found
+
+components:
+  securitySchemes:
+    mitid:
+      type: openIdConnect
+      openIdConnectUrl: https://mitid.example/.well-known/openid-configuration
+
+  schemas:
+    VATApplicationCreate:
+      type: object
+      required:
+        - applicantId
+        - applicationData
+      properties:
+        applicantId:
+          type: string
+          format: uuid
+          description: MitID-linked user id
+        organisation:
+          type: object
+          properties:
+            cvr:
+              type: string
+              description: Danish CVR number (8 digits)
+            name:
+              type: string
+        applicationData:
+          type: object
+          description: Structured form payload; validate against JSON Schema server-side
+          example:
+            registrationType: "standard"
+            startDate: "2026-03-01"
+            schemes:
+              - "oss"
+            contact:
+              phone: "+45 12 34 56 78"
+              email: "info@acme.example"
+
+    VATApplicationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          description: application_status (draft|validated|queued|submitted|accepted|rejected|needs_info)
+        validationWarnings:
+          type: array
+          items:
+            type: string
+        skatReference:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
