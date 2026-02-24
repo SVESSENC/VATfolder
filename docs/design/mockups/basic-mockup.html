@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VAT Registration — Basic Mockup</title>
+  <style>
+    :root{--accent:#2563eb;--muted:#e5e7eb;--bg:#f8fafc}
+    body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);margin:0}
+    .app{display:flex;min-height:100vh}
+    nav{width:260px;background:#fff;border-right:1px solid var(--muted);padding:24px;box-sizing:border-box}
+    nav h2{margin:0 0 12px 0;font-size:16px}
+    .steps{list-style:none;padding:0;margin:0}
+    .steps li{padding:10px 12px;margin-bottom:8px;border-radius:6px;color:#111;border:1px dashed transparent}
+    .steps li.active{background:linear-gradient(90deg,#eef6ff,#fff);border-color:var(--muted)}
+    .main{flex:1;padding:28px}
+    .card{background:#fff;border:1px solid var(--muted);border-radius:8px;padding:20px;max-width:900px}
+    h1{margin:0 0 12px 0;font-size:20px}
+    .field{margin-bottom:12px}
+    label{display:block;font-size:13px;color:#374151;margin-bottom:6px}
+    .input{height:40px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff}
+    .muted{font-size:13px;color:#6b7280}
+    .row{display:flex;gap:12px}
+    .col{flex:1}
+    .button{display:inline-block;padding:10px 14px;background:var(--accent);color:#fff;border-radius:6px;text-decoration:none}
+    .btn-ghost{background:#fff;border:1px solid var(--muted);color:#111}
+    .notice{padding:10px;border-radius:6px;background:#fffbeb;border:1px solid #fef3c7;color:#92400e;margin-bottom:12px}
+    footer{margin-top:18px;color:#6b7280;font-size:13px}
+    /* mobile */
+    @media(max-width:720px){nav{display:none}.main{padding:16px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav>
+      <h2>VAT Registration</h2>
+      <ul class="steps">
+        <li class="active">1 • Assessment</li>
+        <li>2 • Identity & Organisation</li>
+        <li>3 • Draft Application</li>
+        <li>4 • Validate</li>
+        <li>5 • Submit</li>
+        <li>6 • Post-submission</li>
+      </ul>
+      <p class="muted" style="margin-top:18px">Progress is saved automatically. Contact support for help.</p>
+    </nav>
+    <main class="main">
+      <div class="card">
+        <h1>1 — Assessment</h1>
+        <p class="muted">Short questionnaire to determine VAT obligation. Show legal citations on results.</p>
+
+        <div class="notice">This mockup is a basic wireframe — fields are representative only.</div>
+
+        <div class="field">
+          <label>Business start date</label>
+          <input class="input" placeholder="YYYY-MM-DD" />
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <div class="field">
+              <label>Estimated annual turnover (DKK)</label>
+              <input class="input" placeholder="e.g. 125000" />
+            </div>
+          </div>
+          <div class="col">
+            <div class="field">
+              <label>Primary activity</label>
+              <input class="input" placeholder="e.g. Consultancy" />
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:18px;align-items:center">
+          <a class="button" href="#">Run Assessment</a>
+          <a class="btn-ghost" href="#">Save Draft</a>
+        </div>
+
+        <hr style="margin:20px 0;border:none;border-top:1px solid var(--muted)">
+
+        <h2 style="font-size:16px;margin:0 0 10px 0">Result (example)</h2>
+        <p class="muted">Based on the answers, the system recommends that you register for VAT. <strong>Reference:</strong> Section 3.1, VAT Act.</p>
+
+        <div style="margin-top:12px">
+          <strong>Next steps</strong>
+          <ul class="muted">
+            <li>Confirm identity with MitID</li>
+            <li>Prefill CVR details</li>
+            <li>Complete application form and attach documents</li>
+          </ul>
+        </div>
+
+        <footer>Example flow: [Assessment] → [Identity] → [Draft] → [Validate] → [Submit]</footer>
+      </div>
+      
+      <div style="height:18px"></div>
+
+      <div class="card">
+        <h2 style="margin-top:0">3 — Draft Application (preview)</h2>
+        <p class="muted">Minimal form fields and document upload placeholders.</p>
+
+        <div class="row">
+          <div class="col">
+            <div class="field">
+              <label>Organisation name</label>
+              <input class="input" value="Example ApS" />
+            </div>
+            <div class="field">
+              <label>CVR number</label>
+              <input class="input" placeholder="e.g. 12345678" />
+            </div>
+          </div>
+          <div class="col">
+            <div class="field">
+              <label>Contact email</label>
+              <input class="input" placeholder="name@company.dk" />
+            </div>
+            <div class="field">
+              <label>Phone (optional)</label>
+              <input class="input" placeholder="+45" />
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="field">
+          <label>Supporting documents</label>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;padding:12px;border:1px dashed var(--muted);border-radius:6px;background:#fff;">Drop files here</div>
+            <div style="width:160px"><a class="button btn-ghost" href="#">Upload</a></div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;margin-top:16px">
+          <a class="btn-ghost" href="#">Back</a>
+          <a class="button" href="#">Validate Application</a>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
