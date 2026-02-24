@@ -1,10 +1,13 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k: d[k] for k in [''dependencies'',''devDependencies''] if k in d}, indent=2\\)\\)\")",
+      "Bash(netstat -ano)",
+      "Bash(ss -tlnp)",
+      "Bash(npx prisma --version)"
+    ],
     "additionalDirectories": [
       "c:\\Users\\gusv\\.claude\\projects\\c--Users-gusv-VATfolder"
-    ],
-    "allow": [
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k: d[k] for k in [''dependencies'',''devDependencies''] if k in d}, indent=2\\)\\)\")"
     ]
   }
 }
