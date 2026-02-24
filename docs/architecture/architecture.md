@@ -6,7 +6,7 @@ This document describes a practical, buildable system for supporting the main st
 - Legal and API specifics (SKAT/Virk endpoints, required payloads) will be validated by `researcher` before implementation.
 - Users will authenticate with MitID (business/corporate flows where applicable). Confirm MitID product and scope with `researcher`/integrations.
 - CVR and company data will be used for pre-fill via public CVR APIs where permitted.
- - This document follows tech-stack.md as source of truth.
+- This document follows tech-stack.md as source of truth.
 
 **User workflow (high-level steps mapped to registration tasks)**
 1. Validate need to register: present short questionnaire to determine VAT obligation.
@@ -18,13 +18,12 @@ This document describes a practical, buildable system for supporting the main st
 7. Post-registration: generate compliance checklist, first-period filing reminders, and bookkeeping hints.
 
 **System components**
-- Web frontend (SPA) — lightweight React/TypeScript or Vue: forms, flows, status dashboard.
- - Web frontend (SPA) — Next.js (React + TypeScript): forms, flows, status dashboard.
- - Backend API — NestJS on Node.js 22 LTS: business logic, validation, integration adapters.
+- Web frontend (SPA) — Next.js (React + TypeScript): forms, flows, status dashboard.
+- Backend API — NestJS on Node.js 22 LTS: business logic, validation, integration adapters.
 - Auth layer — MitID connector (OIDC/SSO) plus RBAC for internal users.
 - Data store — PostgreSQL for core domain data and audit trails.
 - Document store — S3-compatible blob store for uploaded docs (encrypted).
-- Queue — Redis streams or Azure Service Bus for async tasks (submission, retries, notifications).
+- Queue — Azure Service Bus (event orchestration) + Redis/BullMQ (background jobs, retries).
 - Integration adapters — modular connectors for: MitID auth, CVR lookup, SKAT/Virk submission, e-mail/e-Boks notifications.
 - Audit & logging — append-only audit store (immutable events) and structured logs (ELK or Azure Monitor).
 - Monitoring & alerting — basic health, failed submissions, and SLA alerts.
@@ -45,13 +44,12 @@ This document describes a practical, buildable system for supporting the main st
  - POST /api/v1/applications/{id}/submit
   - Response: submission result or queued status
 
-Detailed contract schemas will be defined during the `Define API contracts` TODO and validated by `researcher` for required fields.
+Full contract schemas are defined in `docs/architecture/filing-api-contract.md` and validated by `researcher` for required fields.
 
 **Integrations**
 - MitID: OIDC flows for user authentication and business authentication. Confirm required scopes and enterprise flows.
 - CVR API: pre-fill business data and validate CVR existence.
 - SKAT/Virk: final submission endpoint(s) — may be direct API or manual upload. `researcher` to confirm available endpoints and required security (e.g., certificate-based TLS/MTLS, signed payloads).
- - SKAT/Virk: final submission endpoint(s) — may be direct API or manual upload. `researcher` to confirm available endpoints and required security (e.g., certificate-based TLS/MTLS, signed payloads).
   - Webhook security: callbacks from SKAT must be validated using a signature header (e.g. `X-SKAT-Signature`) and a timestamp header (e.g. `X-SKAT-Timestamp`). Consumers must reject replayed requests outside an acceptable window and return 401/403 on signature failure.
 - e-Boks / email: delivery of confirmations and follow-ups.
 
@@ -111,5 +109,3 @@ Detailed contract schemas will be defined during the `Define API contracts` TODO
 **Architecture decision log**
 - See docs/adr/README.md for ADR index and full records.
 - See ADRs: ADR-006-orchestrator-eventbus.md, ADR-007-api-versioning.md, ADR-008-auth-by-default.md, ADR-009-idempotency.md, ADR-010-canonical-stack.md
-
-

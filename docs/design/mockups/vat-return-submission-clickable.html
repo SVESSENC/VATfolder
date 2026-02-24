@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VAT Return Submission - Logged-in Flow</title>
+  <style>
+    :root {
+      --ink: #11203a;
+      --ink-soft: #384a66;
+      --paper: #f6f7fb;
+      --card: #ffffff;
+      --line: #24344f;
+      --accent: #0e7c86;
+      --warn: #9f4200;
+      --danger: #8f1d1d;
+      --ok: #1c6a3a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Gill Sans", "Lucida Sans Unicode", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 90% 12%, #d9f3f5 0%, transparent 30%),
+        radial-gradient(circle at 12% 88%, #e8e9ff 0%, transparent 30%),
+        var(--paper);
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 24px auto;
+      border: 2px solid var(--line);
+      background: var(--card);
+      box-shadow: 0 10px 24px rgba(17, 32, 58, 0.12);
+    }
+
+    .topbar {
+      padding: 14px 18px;
+      border-bottom: 2px solid var(--line);
+      background: linear-gradient(90deg, #e8f4f5 0%, #eef1ff 100%);
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .brand { font-weight: 700; letter-spacing: .2px; }
+
+    .meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--ink-soft);
+      font-size: 13px;
+    }
+
+    .meta span {
+      border: 1px solid #5b6d87;
+      padding: 4px 8px;
+      background: #fff;
+    }
+
+    .progress {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      border-bottom: 2px solid var(--line);
+      padding: 10px;
+      background: #f8fbff;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      padding: 8px;
+      font-size: 13px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .step.active {
+      background: #dff7f4;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: 700px;
+    }
+
+    .side {
+      border-right: 2px solid var(--line);
+      padding: 14px;
+      background: #fcfcff;
+    }
+
+    .main { padding: 16px; }
+
+    .panel {
+      border: 1px solid var(--line);
+      padding: 12px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .panel h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    .muted { color: var(--ink-soft); font-size: 13px; }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    label { display: block; font-size: 13px; margin: 6px 0 3px; }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #4d5d75;
+      padding: 8px;
+      font: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .small { font-size: 12px; }
+    .help { color: #49617e; font-size: 12px; margin-top: 2px; }
+    .error { color: var(--danger); font-size: 12px; min-height: 16px; }
+
+    .banner {
+      display: none;
+      border: 1px solid var(--danger);
+      background: #fff0f0;
+      color: #5f1313;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
+    .banner.warn { border-color: var(--warn); background: #fff4eb; color: #6a3309; }
+    .banner.ok { border-color: var(--ok); background: #effbf3; color: #184b2e; }
+
+    .actions {
+      border-top: 2px solid var(--line);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      background: #f8fbff;
+    }
+
+    .group { display: flex; gap: 8px; }
+
+    button {
+      border: 1px solid #233550;
+      background: #fff;
+      color: #0f1f37;
+      padding: 8px 12px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    button.primary { background: #132a45; color: #fff; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+
+    .hidden { display: none; }
+
+    .calc {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      font-size: 14px;
+      align-items: center;
+    }
+
+    .calc .total {
+      border-top: 1px dashed #4f6280;
+      margin-top: 4px;
+      padding-top: 6px;
+      font-weight: 700;
+    }
+
+    .code {
+      border: 1px dashed #5d6b7e;
+      padding: 8px;
+      background: #f9fafc;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .side { border-right: none; border-bottom: 2px solid var(--line); }
+      .grid2 { grid-template-columns: 1fr; }
+      .progress { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">VAT Return Filing Workspace</div>
+      <div class="meta">
+        <span>User: Jane Jensen (logged in)</span>
+        <span>Organisation: ACME A/S (CVR 12345678)</span>
+        <span>Flow: Submit VAT form</span>
+      </div>
+    </div>
+
+    <div class="progress">
+      <div class="step" id="s1">1 Period & Context</div>
+      <div class="step" id="s2">2 Enter Return Values</div>
+      <div class="step" id="s3">3 Review & Evidence</div>
+      <div class="step" id="s4">4 Submit & Receipt</div>
+    </div>
+
+    <div class="layout">
+      <aside class="side">
+        <div class="panel">
+          <h3>Step Context</h3>
+          <div id="context" class="muted"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Edge Case Simulator</h3>
+          <label for="sim">State</label>
+          <select id="sim">
+            <option value="none">None</option>
+            <option value="period-locked">Period already filed / locked</option>
+            <option value="invalid-format">Invalid number format</option>
+            <option value="missing-evidence">Missing evidence package</option>
+            <option value="large-delta">Large reconciliation delta warning</option>
+            <option value="dup-submit">Duplicate submit (idempotency)</option>
+            <option value="submit-timeout">Submission timeout</option>
+          </select>
+          <div class="help">Applies to current step.</div>
+        </div>
+
+        <div class="panel">
+          <h3>Live Snapshot</h3>
+          <div id="snapshot" class="small muted"></div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div id="banner" class="banner" role="alert" aria-live="assertive"></div>
+
+        <section id="step1" class="screen">
+          <div class="panel">
+            <h3>Period and filing context</h3>
+            <div class="grid2">
+              <div>
+                <label for="period">VAT period</label>
+                <select id="period">
+                  <option value="">Select period</option>
+                  <option value="2026-Q1">2026 Q1</option>
+                  <option value="2025-Q4">2025 Q4</option>
+                </select>
+              </div>
+              <div>
+                <label for="filingType">Filing type</label>
+                <select id="filingType">
+                  <option value="">Select type</option>
+                  <option value="ordinary">Ordinary filing</option>
+                  <option value="correction">Correction filing</option>
+                </select>
+              </div>
+            </div>
+            <label for="notes">Internal note (optional)</label>
+            <textarea id="notes" rows="3" placeholder="Reason/context for this filing"></textarea>
+          </div>
+        </section>
+
+        <section id="step2" class="screen hidden">
+          <div class="panel">
+            <h3>Domestic VAT amounts (DKK VAT amounts)</h3>
+            <div class="grid2">
+              <div>
+                <label for="salgsmoms">Salgsmoms (output VAT)</label>
+                <input id="salgsmoms" placeholder="0.00" />
+                <div class="error" id="e-salg"></div>
+              </div>
+              <div>
+                <label for="kobsmoms">Kobsmoms (input VAT)</label>
+                <input id="kobsmoms" placeholder="0.00" />
+                <div class="error" id="e-kob"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Reverse-charge purchase VAT (DKK VAT amounts)</h3>
+            <div class="grid2">
+              <div>
+                <label for="momsVarer">Moms af varekob i udlandet</label>
+                <input id="momsVarer" placeholder="0.00" />
+              </div>
+              <div>
+                <label for="momsYdelser">Moms af ydelseskob i udlandet med omvendt betalingspligt</label>
+                <input id="momsYdelser" placeholder="0.00" />
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Rubrik A/B/C values (without VAT)</h3>
+            <div class="help">Enter amounts excluding VAT.</div>
+            <div class="grid2">
+              <div>
+                <label for="aVarer">Rubrik A - varer</label>
+                <input id="aVarer" placeholder="0.00" />
+              </div>
+              <div>
+                <label for="aYdelser">Rubrik A - ydelser</label>
+                <input id="aYdelser" placeholder="0.00" />
+              </div>
+              <div>
+                <label for="bVarer">Rubrik B - varer</label>
+                <input id="bVarer" placeholder="0.00" />
+              </div>
+              <div>
+                <label for="bTri">Rubrik B - varer (triangular)</label>
+                <input id="bTri" placeholder="0.00" />
+              </div>
+              <div>
+                <label for="bYdelser">Rubrik B - ydelser</label>
+                <input id="bYdelser" placeholder="0.00" />
+              </div>
+              <div>
+                <label for="rubC">Rubrik C</label>
+                <input id="rubC" placeholder="0.00" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="step3" class="screen hidden">
+          <div class="panel">
+            <h3>Reconciliation preview</h3>
+            <div class="calc">
+              <div>Salgsmoms</div><div id="vSalg">0.00</div>
+              <div>- Kobsmoms</div><div id="vKob">0.00</div>
+              <div>+ Reverse-charge VAT (goods + services)</div><div id="vRev">0.00</div>
+              <div class="total">Net VAT position</div><div class="total" id="net">0.00</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Evidence package</h3>
+            <label><input type="checkbox" id="evLedger" /> Ledger-to-return reconciliation attached</label>
+            <label><input type="checkbox" id="evEU" /> EU VAT-number evidence attached (if relevant)</label>
+            <label><input type="checkbox" id="evExport" /> Export/transport evidence attached (if relevant)</label>
+            <label for="signoff">Reviewer/approver sign-off</label>
+            <input id="signoff" placeholder="Name + role" />
+          </div>
+
+          <div class="panel">
+            <h3>Validation summary</h3>
+            <div id="reviewSummary" class="muted">Run check via Continue to generate summary.</div>
+          </div>
+        </section>
+
+        <section id="step4" class="screen hidden">
+          <div class="panel">
+            <h3>Submit VAT return</h3>
+            <p class="muted">Submission uses async filing endpoint with idempotency protection.</p>
+            <div class="code" id="payload"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Receipt / status</h3>
+            <div id="receipt" class="muted">Not submitted yet.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="actions">
+      <div class="group">
+        <button id="back">Back</button>
+      </div>
+      <div class="group">
+        <button id="save">Save draft</button>
+        <button class="primary" id="next">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const contextByStep = {
+      1: "Choose filing period and type. Block if period is already filed/locked.",
+      2: "Enter VAT amount fields and Rubrik A/B/C values using numeric DKK values.",
+      3: "Review calculated net position and confirm required evidence/sign-off.",
+      4: "Submit filing and record receipt/status for audit trail."
+    };
+
+    const state = {
+      step: 1,
+      version: 1,
+      submitted: false,
+      filingId: null,
+      submitStatus: null
+    };
+
+    const moneyFields = ["salgsmoms","kobsmoms","momsVarer","momsYdelser","aVarer","aYdelser","bVarer","bTri","bYdelser","rubC"];
+
+    const q = (id) => document.getElementById(id);
+
+    function setBanner(msg, kind = "error") {
+      const b = q("banner");
+      b.textContent = msg;
+      b.className = "banner";
+      b.classList.add(kind === "ok" ? "ok" : kind === "warn" ? "warn" : "");
+      b.style.display = "block";
+    }
+
+    function clearBanner() {
+      const b = q("banner");
+      b.style.display = "none";
+      b.className = "banner";
+      b.textContent = "";
+    }
+
+    function parseNum(val) {
+      if (!val) return 0;
+      const n = Number(val);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    function format(n) {
+      return Number(n).toFixed(2);
+    }
+
+    function updateSnapshot() {
+      q("snapshot").textContent = `step=${state.step}, version=${state.version}, submitted=${state.submitted}, filingId=${state.filingId || "-"}, status=${state.submitStatus || "-"}`;
+    }
+
+    function showStep(step) {
+      state.step = Math.max(1, Math.min(4, step));
+      [1,2,3,4].forEach(n => q(`s${n}`).classList.toggle("active", n === state.step));
+      [1,2,3,4].forEach(n => q(`step${n}`).classList.toggle("hidden", n !== state.step));
+      q("context").textContent = contextByStep[state.step];
+      clearBanner();
+      validate();
+      if (state.step === 3) recalc();
+      if (state.step === 4) buildPayload();
+      updateSnapshot();
+    }
+
+    function validateMoney() {
+      let ok = true;
+      if (q("sim").value === "invalid-format") {
+        q("e-salg").textContent = "Enter a numeric amount (e.g. 1250.00).";
+        return false;
+      }
+      q("e-salg").textContent = "";
+      q("e-kob").textContent = "";
+
+      for (const id of moneyFields) {
+        const val = q(id).value.trim();
+        if (val === "") continue;
+        if (!/^\d+(\.\d{1,2})?$/.test(val)) {
+          ok = false;
+          if (id === "salgsmoms") q("e-salg").textContent = "Max 2 decimals, numeric only.";
+          if (id === "kobsmoms") q("e-kob").textContent = "Max 2 decimals, numeric only.";
+        }
+      }
+      return ok;
+    }
+
+    function validate() {
+      const sim = q("sim").value;
+      let can = false;
+
+      if (state.step === 1) {
+        can = !!(q("period").value && q("filingType").value);
+        if (sim === "period-locked" && can) {
+          can = false;
+          setBanner("This period is already filed and locked. Use correction flow.", "warn");
+        }
+      }
+
+      if (state.step === 2) {
+        can = validateMoney() && q("salgsmoms").value.trim() !== "" && q("kobsmoms").value.trim() !== "";
+      }
+
+      if (state.step === 3) {
+        const signoff = q("signoff").value.trim();
+        const evidenceOk = q("evLedger").checked;
+        can = signoff.length > 2 && evidenceOk;
+      }
+
+      if (state.step === 4) {
+        can = true;
+      }
+
+      q("next").disabled = !can;
+    }
+
+    function recalc() {
+      const salg = parseNum(q("salgsmoms").value);
+      const kob = parseNum(q("kobsmoms").value);
+      const rev = parseNum(q("momsVarer").value) + parseNum(q("momsYdelser").value);
+      const net = salg - kob + rev;
+
+      q("vSalg").textContent = format(isNaN(salg) ? 0 : salg);
+      q("vKob").textContent = format(isNaN(kob) ? 0 : kob);
+      q("vRev").textContent = format(isNaN(rev) ? 0 : rev);
+      q("net").textContent = format(isNaN(net) ? 0 : net);
+
+      const sim = q("sim").value;
+      if (sim === "large-delta") {
+        q("reviewSummary").textContent = "Warning: Net position deviates significantly from prior period. Add reviewer note before submit.";
+        setBanner("Large reconciliation delta detected.", "warn");
+      } else if (q("sim").value === "missing-evidence") {
+        q("reviewSummary").textContent = "Missing evidence package for non-zero cross-border fields.";
+        setBanner("Evidence is missing for one or more non-zero cross-border boxes.", "warn");
+      } else {
+        q("reviewSummary").textContent = "Validation checks passed for numeric structure and required sign-off fields.";
+      }
+    }
+
+    function buildPayload() {
+      const payload = {
+        taxpayerId: "cvr:12345678",
+        period: q("period").value || "",
+        payload: {
+          salgsmoms: q("salgsmoms").value || "0.00",
+          kobsmoms: q("kobsmoms").value || "0.00",
+          moms_af_varekob_i_udlandet: q("momsVarer").value || "0.00",
+          moms_af_ydelseskob_i_udlandet: q("momsYdelser").value || "0.00",
+          rubrik_a_varer: q("aVarer").value || "0.00",
+          rubrik_a_ydelser: q("aYdelser").value || "0.00",
+          rubrik_b_varer: q("bVarer").value || "0.00",
+          rubrik_b_varer_triangular: q("bTri").value || "0.00",
+          rubrik_b_ydelser: q("bYdelser").value || "0.00",
+          rubrik_c: q("rubC").value || "0.00",
+          approver: q("signoff").value || ""
+        }
+      };
+      q("payload").textContent = `POST /api/v1/filings\nX-Idempotency-Key: vat-${Date.now()}\n\n${JSON.stringify(payload, null, 2)}`;
+    }
+
+    q("back").addEventListener("click", () => showStep(state.step - 1));
+
+    q("save").addEventListener("click", () => {
+      if (q("sim").value === "invalid-format" && state.step === 2) {
+        setBanner("Draft not saved. Fix invalid numeric formats first.");
+        return;
+      }
+      state.version += 1;
+      setBanner(`Draft saved at ${new Date().toLocaleTimeString()}.`, "ok");
+      updateSnapshot();
+    });
+
+    q("next").addEventListener("click", () => {
+      const sim = q("sim").value;
+
+      if (state.step === 3 && sim === "missing-evidence") {
+        setBanner("Cannot continue: minimum evidence package missing.");
+        return;
+      }
+
+      if (state.step < 4) {
+        showStep(state.step + 1);
+        return;
+      }
+
+      if (sim === "dup-submit") {
+        state.filingId = "fil_2026_00077";
+        state.submitStatus = "duplicate_request_reused";
+        q("receipt").textContent = "Duplicate request detected. Existing filing reused: fil_2026_00077.";
+        state.submitted = true;
+        setBanner("Idempotency key matched existing submission.", "warn");
+        updateSnapshot();
+        return;
+      }
+
+      if (sim === "submit-timeout") {
+        state.submitStatus = "queued_retry";
+        q("receipt").textContent = "Submission gateway timeout. Filing queued for retry. Track status in submissions.";
+        setBanner("Submission timed out and was queued for retry.", "warn");
+        updateSnapshot();
+        return;
+      }
+
+      state.filingId = `fil_${new Date().getFullYear()}_${Math.floor(Math.random()*90000 + 10000)}`;
+      state.submitStatus = "accepted";
+      state.submitted = true;
+      q("receipt").textContent = `Submitted successfully. Filing ID: ${state.filingId}. Status: accepted (async processing).`;
+      setBanner("VAT return submitted.", "ok");
+      updateSnapshot();
+    });
+
+    q("sim").addEventListener("change", () => {
+      clearBanner();
+      if (state.step === 3) recalc();
+      validate();
+    });
+
+    ["period","filingType","signoff", ...moneyFields].forEach(id => q(id).addEventListener("input", () => {
+      if (state.step === 3) recalc();
+      validate();
+    }));
+
+    ["evLedger","evEU","evExport"].forEach(id => q(id).addEventListener("change", validate));
+
+    showStep(1);
+  </script>
+</body>
+</html>

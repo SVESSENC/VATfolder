@@ -598,15 +598,20 @@ components:
           type: string
           format: uuid
           description: MitID-linked user id
-        organisation:
-          $ref: '#/components/schemas/Organisation'
+        organisationId:
+          type: string
+          format: uuid
+          description: Organisation id (after CVR lookup)
+        obligationAssessmentId:
+          type: string
+          format: uuid
+          description: Reference to obligation assessment result from step 1
         applicationData:
           $ref: '#/components/schemas/ApplicationData'
       example:
         applicantId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-        organisation:
-          cvr: "12345678"
-          name: "ACME A/S"
+        organisationId: "550e8400-e29b-41d4-a716-446655440000"
+        obligationAssessmentId: "660e8400-e29b-41d4-a716-446655440000"
         applicationData:
           registrationType: "standard"
           startDate: "2026-03-01"
@@ -620,13 +625,32 @@ components:
       type: object
       properties:
         applicationData:
-          type: object
           $ref: '#/components/schemas/ApplicationData'
+        currentStep:
+          type: string
+          description: Current workflow step
+          enum:
+            - assessment
+            - identity_and_org
+            - draft_application
+            - validation
+            - submission
+            - post_submission
+            - post_registration
 
     VATApplicationResponse:
       type: object
       properties:
         id:
+          type: string
+          format: uuid
+        applicantId:
+          type: string
+          format: uuid
+        organisationId:
+          type: string
+          format: uuid
+        obligationAssessmentId:
           type: string
           format: uuid
         status:
@@ -640,13 +664,32 @@ components:
             - accepted
             - rejected
             - needs_info
+        currentStep:
+          type: string
+          description: Current workflow step
+          enum:
+            - assessment
+            - identity_and_org
+            - draft_application
+            - validation
+            - submission
+            - post_submission
+            - post_registration
+        applicationData:
+          $ref: '#/components/schemas/ApplicationData'
         validationWarnings:
           type: array
           items:
             type: string
+        version:
+          type: integer
+          description: Optimistic concurrency version
         skatReference:
           type: string
         createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
 
@@ -736,11 +779,82 @@ components:
           - message: Consider OSS registration
             citationKey: VAT_OSS_HINT
 
+    ObligationAssessmentInput:
+      type: object
+      required:
+        - organisation
+        - context
+      properties:
+        organisation:
+          $ref: '#/components/schemas/Organisation'
+        context:
+          type: object
+          description: Business context for assessment
+          properties:
+            annualTurnover:
+              type: number
+              description: Estimated annual turnover in DKK
+            businessType:
+              type: string
+            otherFacts:
+              type: object
+      example:
+        organisation:
+          cvr: "12345678"
+          name: "ACME A/S"
+        context:
+          annualTurnover: 500000
+          businessType: "goods_trading"
+
+    ObligationAssessment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organisationId:
+          type: string
+          format: uuid
+        obligationRequired:
+          type: boolean
+          description: null=inconclusive, true=yes, false=no
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+            - inconclusive
+        legalCitations:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              description:
+                type: string
+              uri:
+                type: string
+        reasoning:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
     AssessmentResult:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         obligated:
           type: boolean
+          description: VAT registration required (true) or not (false)
+        status:
+          type: string
+          enum:
+            - completed
+            - inconclusive
         reasons:
           type: array
           items:
@@ -750,11 +864,18 @@ components:
                 type: string
               citationKey:
                 type: string
+              citationUri:
+                type: string
+        assessmentData:
+          type: object
       example:
+        id: "660e8400-e29b-41d4-a716-446655440000"
         obligated: true
+        status: "completed"
         reasons:
           - message: Annual turnover exceeds threshold
             citationKey: VAT_TURNOVER_01
+            citationUri: "https://danish-vat-law.example/section-2-1"
 
     SubmissionResult:
       type: object

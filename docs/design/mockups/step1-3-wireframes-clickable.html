@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VAT Registration Wireframes - Step 1-3</title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --panel: #ffffff;
+      --line: #222;
+      --muted: #666;
+      --focus: #0a66c2;
+      --error-bg: #fff1f1;
+      --ok-bg: #f1fff4;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #f8f8f8 0%, #ececec 100%);
+      color: #111;
+    }
+
+    .shell {
+      max-width: 1100px;
+      margin: 24px auto;
+      border: 2px solid var(--line);
+      background: var(--panel);
+      box-shadow: 0 8px 30px rgba(0,0,0,.08);
+    }
+
+    .header {
+      padding: 14px 16px;
+      border-bottom: 2px solid var(--line);
+      background: #fafafa;
+    }
+
+    .title { font-weight: 700; margin-bottom: 8px; }
+
+    .progress {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .step-pill {
+      border: 1px solid var(--line);
+      padding: 8px;
+      font-size: 13px;
+      text-align: center;
+      background: #fff;
+    }
+
+    .step-pill.active { background: #e9f4ff; border-color: var(--focus); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 620px;
+    }
+
+    .sidebar {
+      border-right: 2px solid var(--line);
+      padding: 14px;
+      background: #fcfcfc;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .box {
+      border: 1px solid var(--line);
+      padding: 12px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label { display: block; font-size: 13px; margin-bottom: 4px; }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #444;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid var(--focus);
+      outline-offset: 1px;
+    }
+
+    .inline { display: inline-flex; align-items: center; gap: 8px; margin-right: 12px; }
+
+    .actions {
+      border-top: 2px solid var(--line);
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      background: #fafafa;
+    }
+
+    .left-actions, .right-actions { display: flex; gap: 8px; }
+
+    button {
+      border: 1px solid #111;
+      background: #fff;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    button.primary { background: #111; color: #fff; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .banner {
+      border: 1px solid #900;
+      background: var(--error-bg);
+      padding: 10px;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .banner.ok {
+      border-color: #145a32;
+      background: var(--ok-bg);
+    }
+
+    .muted { color: var(--muted); font-size: 13px; }
+
+    .result-list { margin: 6px 0 0 18px; }
+
+    .chip {
+      display: inline-block;
+      border: 1px solid #444;
+      padding: 3px 6px;
+      margin-right: 6px;
+      font-size: 12px;
+    }
+
+    .hidden { display: none; }
+
+    .panel-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .doc-list {
+      margin: 8px 0;
+      padding: 8px;
+      border: 1px dashed #666;
+      background: #fafafa;
+      min-height: 48px;
+    }
+
+    .error-inline { color: #900; font-size: 12px; min-height: 16px; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 2px solid var(--line); }
+      .row { grid-template-columns: 1fr; }
+      .progress { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="header">
+      <div class="title">VAT Registration - Low-Fi Clickable Wireframe (Step 1-3)</div>
+      <div class="progress">
+        <div class="step-pill" id="pill-1">1 Assessment</div>
+        <div class="step-pill" id="pill-2">2 Identity & Org</div>
+        <div class="step-pill" id="pill-3">3 Draft</div>
+        <div class="step-pill">4 Validate</div>
+        <div class="step-pill">5 Submit</div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="box">
+          <div class="panel-title">Context</div>
+          <div id="context-text" class="muted"></div>
+        </div>
+
+        <div class="box">
+          <div class="panel-title">Edge Case Simulator</div>
+          <label for="simulator">Pick a state</label>
+          <select id="simulator">
+            <option value="none">None</option>
+            <option value="assess-timeout">Step 1: Assessment API timeout</option>
+            <option value="assess-inconclusive">Step 1: Inconclusive result</option>
+            <option value="mitid-cancel">Step 2: MitID canceled</option>
+            <option value="cvr-not-found">Step 2: CVR not found</option>
+            <option value="cvr-down">Step 2: CVR service unavailable</option>
+            <option value="draft-conflict">Step 3: Draft version conflict (409)</option>
+            <option value="upload-fail">Step 3: File upload failure</option>
+          </select>
+          <div class="status">Applies to current step.</div>
+        </div>
+
+        <div class="box">
+          <div class="panel-title">State Snapshot</div>
+          <div id="snapshot" class="muted">No data yet.</div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <div id="banner" class="banner" role="alert" aria-live="assertive"></div>
+
+        <section id="step-1" class="step-screen">
+          <div class="box">
+            <div class="panel-title">Step 1: Obligation Questionnaire</div>
+            <p class="muted">Answer 5 quick questions to determine VAT registration obligation.</p>
+
+            <div class="row">
+              <div>
+                <label for="businessType">Business activity type</label>
+                <select id="businessType">
+                  <option value="">Select one</option>
+                  <option>Goods trading</option>
+                  <option>Digital services</option>
+                  <option>Consulting</option>
+                </select>
+              </div>
+              <div>
+                <label for="turnover">Estimated annual turnover (DKK)</label>
+                <input id="turnover" placeholder="e.g. 500000" />
+                <div id="turnoverErr" class="error-inline"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px">
+              <span class="inline"><input type="checkbox" id="euSales" /> <label for="euSales" style="margin:0">Sells to EU consumers</label></span>
+              <span class="inline"><input type="checkbox" id="digitalSales" /> <label for="digitalSales" style="margin:0">Sells digital services</label></span>
+              <span class="inline"><input type="checkbox" id="alreadyVat" /> <label for="alreadyVat" style="margin:0">Already VAT registered elsewhere</label></span>
+            </div>
+          </div>
+
+          <div class="box" id="assessmentResult" style="display:none">
+            <div class="panel-title">Assessment result</div>
+            <div id="resultText"></div>
+            <ul class="result-list" id="reasons"></ul>
+            <div style="margin-top:8px;">
+              <span class="chip">VAT_TURNOVER_01</span>
+              <span class="chip">VAT_EU_SALES_02</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="step-2" class="step-screen hidden">
+          <div class="box">
+            <div class="panel-title">Step 2: Identity and Organisation</div>
+            <p class="muted">Authenticate with MitID, then lookup and confirm organisation by CVR.</p>
+            <button id="mitidBtn">Continue with MitID</button>
+            <div id="mitidStatus" class="status">Not authenticated.</div>
+          </div>
+
+          <div class="box">
+            <label for="cvr">CVR number</label>
+            <div class="row">
+              <input id="cvr" maxlength="8" placeholder="8 digits" />
+              <button id="lookupBtn">Lookup</button>
+            </div>
+            <div id="cvrErr" class="error-inline"></div>
+          </div>
+
+          <div class="box" id="orgCard" style="display:none">
+            <div class="panel-title">Organisation result</div>
+            <div id="orgText"></div>
+            <div style="margin-top:8px">
+              <button id="useOrgBtn" class="primary">Use this organisation</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="step-3" class="step-screen hidden">
+          <div class="box">
+            <div class="panel-title">Step 3: Application Draft</div>
+            <div class="row">
+              <div>
+                <label for="regType">Registration type</label>
+                <select id="regType">
+                  <option value="">Select type</option>
+                  <option value="standard">Standard</option>
+                  <option value="reverse_charge">Reverse charge</option>
+                  <option value="non_resident">Non-resident</option>
+                </select>
+              </div>
+              <div>
+                <label for="startDate">Start date</label>
+                <input id="startDate" type="date" />
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <div>
+                <label for="phone">Contact phone</label>
+                <input id="phone" placeholder="+45 ..." />
+              </div>
+              <div>
+                <label for="email">Contact email</label>
+                <input id="email" placeholder="name@company.dk" />
+                <div id="emailErr" class="error-inline"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="box">
+            <div class="panel-title">Supporting documents</div>
+            <button id="uploadBtn">Upload file</button>
+            <div class="doc-list" id="docList">No files uploaded.</div>
+            <div class="muted">Allowed: PDF, JPG, PNG (max 10 MB)</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="actions">
+      <div class="left-actions">
+        <button id="backBtn">Back</button>
+      </div>
+      <div class="right-actions">
+        <button id="saveBtn">Save draft</button>
+        <button id="continueBtn" class="primary">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const contextText = document.getElementById("context-text");
+    const banner = document.getElementById("banner");
+    const simulator = document.getElementById("simulator");
+    const snapshot = document.getElementById("snapshot");
+
+    let step = 1;
+    let state = {
+      assessmentDone: false,
+      mitidDone: false,
+      orgConfirmed: false,
+      applicationSaved: false,
+      version: 1
+    };
+
+    const contexts = {
+      1: "Assess likely VAT obligation. Show citations and keep answers editable.",
+      2: "Authenticate with MitID, lookup CVR, and confirm organisation link.",
+      3: "Create draft with registration details and optional documents."
+    };
+
+    function showStep(nextStep) {
+      step = Math.max(1, Math.min(3, nextStep));
+      document.querySelectorAll(".step-screen").forEach((el, idx) => {
+        el.classList.toggle("hidden", idx + 1 !== step);
+      });
+      [1,2,3].forEach(i => document.getElementById(`pill-${i}`).classList.toggle("active", i === step));
+      contextText.textContent = contexts[step];
+      clearBanner();
+      renderSnapshot();
+      validateContinue();
+    }
+
+    function setBanner(message, ok = false) {
+      banner.textContent = message;
+      banner.style.display = "block";
+      banner.classList.toggle("ok", ok);
+    }
+
+    function clearBanner() {
+      banner.style.display = "none";
+      banner.classList.remove("ok");
+      banner.textContent = "";
+    }
+
+    function renderSnapshot() {
+      snapshot.textContent = `step=${step}, assessmentDone=${state.assessmentDone}, mitidDone=${state.mitidDone}, orgConfirmed=${state.orgConfirmed}, applicationSaved=${state.applicationSaved}, version=${state.version}`;
+    }
+
+    function validateStep1() {
+      const turnover = document.getElementById("turnover").value.trim();
+      const err = document.getElementById("turnoverErr");
+      if (turnover && !/^\d+$/.test(turnover)) {
+        err.textContent = "Enter turnover as numbers only.";
+        return false;
+      }
+      err.textContent = "";
+      return document.getElementById("businessType").value && turnover;
+    }
+
+    function validateStep2() {
+      return state.mitidDone && state.orgConfirmed;
+    }
+
+    function validateStep3() {
+      const email = document.getElementById("email").value.trim();
+      const emailErr = document.getElementById("emailErr");
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailErr.textContent = "Enter a valid email address.";
+        return false;
+      }
+      emailErr.textContent = "";
+      return !!(document.getElementById("regType").value && document.getElementById("startDate").value && email);
+    }
+
+    function validateContinue() {
+      const btn = document.getElementById("continueBtn");
+      let enabled = false;
+      if (step === 1) enabled = validateStep1();
+      if (step === 2) enabled = validateStep2();
+      if (step === 3) enabled = validateStep3();
+      btn.disabled = !enabled;
+    }
+
+    document.getElementById("continueBtn").addEventListener("click", () => {
+      const sim = simulator.value;
+      if (step === 1) {
+        if (sim === "assess-timeout") {
+          setBanner("Assessment request timed out. Retry or save answers.");
+          return;
+        }
+
+        const resultBox = document.getElementById("assessmentResult");
+        const resultText = document.getElementById("resultText");
+        const reasons = document.getElementById("reasons");
+        reasons.innerHTML = "";
+
+        if (sim === "assess-inconclusive") {
+          resultText.textContent = "Result: Inconclusive. Manual review path required.";
+          ["Insufficient context for automatic decision"].forEach(r => {
+            const li = document.createElement("li");
+            li.textContent = r;
+            reasons.appendChild(li);
+          });
+          setBanner("We cannot determine obligation automatically.");
+        } else {
+          resultText.textContent = "Result: Registration likely required.";
+          ["Annual turnover exceeds threshold", "EU sales pattern indicates VAT obligation"].forEach(r => {
+            const li = document.createElement("li");
+            li.textContent = r;
+            reasons.appendChild(li);
+          });
+          setBanner("Assessment completed.", true);
+        }
+
+        resultBox.style.display = "block";
+        state.assessmentDone = true;
+        showStep(2);
+        return;
+      }
+
+      if (step === 2) {
+        showStep(3);
+        return;
+      }
+
+      if (step === 3) {
+        if (sim === "draft-conflict") {
+          setBanner("A newer draft exists (409). Reload latest or compare changes.");
+          return;
+        }
+        state.applicationSaved = true;
+        state.version += 1;
+        setBanner("Draft complete for Step 1-3 prototype.", true);
+      }
+      renderSnapshot();
+    });
+
+    document.getElementById("backBtn").addEventListener("click", () => showStep(step - 1));
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      if (step === 3 && simulator.value === "draft-conflict") {
+        setBanner("Save failed: draft version conflict (409).", false);
+        return;
+      }
+      state.applicationSaved = true;
+      setBanner(`Saved at ${new Date().toLocaleTimeString()}.`, true);
+      renderSnapshot();
+    });
+
+    document.getElementById("mitidBtn").addEventListener("click", () => {
+      if (simulator.value === "mitid-cancel") {
+        setBanner("Authentication was canceled. Please try again.");
+        document.getElementById("mitidStatus").textContent = "Not authenticated.";
+        state.mitidDone = false;
+      } else {
+        document.getElementById("mitidStatus").textContent = "Authenticated as Jane Jensen.";
+        state.mitidDone = true;
+        setBanner("MitID authentication successful.", true);
+      }
+      validateContinue();
+      renderSnapshot();
+    });
+
+    document.getElementById("lookupBtn").addEventListener("click", () => {
+      const cvr = document.getElementById("cvr").value.trim();
+      const cvrErr = document.getElementById("cvrErr");
+      const orgCard = document.getElementById("orgCard");
+      const orgText = document.getElementById("orgText");
+
+      if (!/^\d{8}$/.test(cvr)) {
+        cvrErr.textContent = "CVR must be exactly 8 digits.";
+        orgCard.style.display = "none";
+        validateContinue();
+        return;
+      }
+
+      cvrErr.textContent = "";
+      if (simulator.value === "cvr-not-found") {
+        orgCard.style.display = "none";
+        setBanner("No organisation found for this CVR.");
+        state.orgConfirmed = false;
+      } else if (simulator.value === "cvr-down") {
+        orgCard.style.display = "none";
+        setBanner("CVR service unavailable. Manual unverified entry allowed.");
+        state.orgConfirmed = false;
+      } else {
+        orgText.textContent = `ACME A/S, CVR ${cvr}, Examplevej 1, 2100 KBH`;
+        orgCard.style.display = "block";
+        setBanner("Organisation found. Confirm to continue.", true);
+      }
+      validateContinue();
+      renderSnapshot();
+    });
+
+    document.getElementById("useOrgBtn").addEventListener("click", () => {
+      state.orgConfirmed = true;
+      setBanner("Organisation confirmed.", true);
+      validateContinue();
+      renderSnapshot();
+    });
+
+    document.getElementById("uploadBtn").addEventListener("click", () => {
+      if (simulator.value === "upload-fail") {
+        setBanner("Upload failed for proof_of_activity.pdf. Retry this file.");
+        return;
+      }
+      document.getElementById("docList").textContent = "proof_of_activity.pdf - Uploaded just now";
+      setBanner("File uploaded.", true);
+    });
+
+    ["businessType","turnover","regType","startDate","email"].forEach(id => {
+      document.getElementById(id).addEventListener("input", validateContinue);
+    });
+
+    simulator.addEventListener("change", () => {
+      clearBanner();
+      validateContinue();
+    });
+
+    showStep(1);
+  </script>
+</body>
+</html>

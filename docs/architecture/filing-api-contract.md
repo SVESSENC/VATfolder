@@ -19,7 +19,7 @@ Common headers
 2) Get filing status
 - Endpoint: `GET /api/v1/filings/{filingId}`
 - Response: 200 OK
-  - Body: `{ "filingId": "<uuid>", "status": "PENDING_VALIDATION|VALIDATED|ASSESSMENT_COMPLETED|AMENDABLE|REJECTED|AUDITED", "events": [ ... ] }`
+  - Body: `{ "filingId": "<uuid>", "status": "PENDING|VALIDATED|ASSESSED|AMENDABLE|AUDITED|CLOSED", "events": [ ... ] }`
 
 3) Submit an amendment
 - Endpoint: `POST /api/v1/filings/{filingId}/amendments`
