@@ -1,0 +1,295 @@
+﻿// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum ApplicationStatus {
+  draft
+  validated
+  queued
+  submitted
+  accepted
+  rejected
+  needs_info
+}
+
+enum WorkflowStep {
+  assessment
+  identity_and_org
+  draft_application
+  validation
+  submission
+  post_submission
+  post_registration
+}
+
+enum ObligationAssessmentStatus {
+  pending
+  completed
+  inconclusive
+}
+
+enum SubmissionStatus {
+  queued
+  processing
+  sent
+  failed
+  completed
+}
+
+enum FilingStatus {
+  pending
+  validated
+  assessed
+  amendable
+  audited
+  closed
+}
+
+// Models
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mitidSub     String?   @unique @map("mitid_sub")
+  email        String?
+  displayName  String?   @map("display_name")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  vatApplications VatApplication[]
+  auditEvents     AuditEvent[]
+  userRoles       UserRole[]
+  idempotencyKeys IdempotencyKey[]
+
+  @@map("users")
+}
+
+model Organisation {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cvr             String    @unique @db.VarChar(8)
+  name            String?
+  primaryAddress  Json?     @map("primary_address")
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  obligationAssessments ObligationAssessment[]
+  vatApplications       VatApplication[]
+  filings               Filing[]
+  claims                Claim[]
+
+  @@map("organisations")
+}
+
+model ObligationAssessment {
+  id                String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organisationId    String                     @map("organisation_id") @db.Uuid
+  assessmentData    Json                       @map("assessment_data")
+  status            ObligationAssessmentStatus @default(pending)
+  obligationRequired Boolean?                  @map("obligation_required")
+  legalCitations    Json?                      @default("[]") @map("legal_citations")
+  reasoning         String?
+  createdAt         DateTime                   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  vatApplications VatApplication[]
+
+  @@index([organisationId], map: "idx_obligation_org")
+  @@map("obligation_assessments")
+}
+
+model VatApplication {
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicantId           String?           @map("applicant_id") @db.Uuid
+  organisationId        String?           @map("organisation_id") @db.Uuid
+  obligationAssessmentId String?          @map("obligation_assessment_id") @db.Uuid
+  applicationData       Json              @map("application_data")
+  validationWarnings    Json?             @default("[]") @map("validation_warnings")
+  status                ApplicationStatus @default(draft)
+  currentStep           WorkflowStep      @default(assessment) @map("current_step")
+  version               Int               @default(1)
+  skatReference         String?           @map("skat_reference")
+  submissionPayload     Bytes?            @map("submission_payload")
+  createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  applicant          User?                 @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  organisation       Organisation?         @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  obligationAssessment ObligationAssessment? @relation(fields: [obligationAssessmentId], references: [id], onDelete: SetNull)
+  documents          Document[]
+  submission         Submission?
+
+  @@index([status], map: "idx_vat_app_status")
+  @@index([organisationId], map: "idx_vat_app_org")
+  @@index([currentStep], map: "idx_vat_app_step")
+  @@index([obligationAssessmentId], map: "idx_vat_app_assessment")
+  @@map("vat_applications")
+}
+
+model Document {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerApplicationId String    @map("owner_application") @db.Uuid
+  filename           String?
+  contentType        String?   @map("content_type")
+  storagePath        String?   @map("storage_path")
+  checksum           String?
+  meta               Json?
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  ownerApplication VatApplication @relation(fields: [ownerApplicationId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+model AuditEvent {
+  id          BigInt    @id @default(autoincrement())
+  actorId     String?   @map("actor_id") @db.Uuid
+  objectType  String    @map("object_type")
+  objectId    String?   @map("object_id") @db.Uuid
+  action      String
+  payload     Json?
+  payloadHash String?   @map("payload_hash")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@map("audit_events")
+}
+
+model Role {
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  description String?
+
+  userRoles UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId String @map("user_id") @db.Uuid
+  roleId Int    @map("role_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model IdempotencyKey {
+  id             BigInt    @id @default(autoincrement())
+  idempotencyKey String    @map("idempotency_key")
+  route          String
+  ownerId        String?   @map("owner_id") @db.Uuid
+  requestHash    String?   @map("request_hash")
+  responsePayload Json?    @map("response_payload")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@unique([idempotencyKey, route])
+  @@map("idempotency_keys")
+}
+
+model EventLog {
+  eventId       String    @id @default(dbgenerated("gen_random_uuid()")) @map("event_id") @db.Uuid
+  eventType     String    @map("event_type")
+  aggregateType String?   @map("aggregate_type")
+  aggregateId   String?   @map("aggregate_id") @db.Uuid
+  correlationId String?   @map("correlation_id") @db.Uuid
+  causationId   String?   @map("causation_id") @db.Uuid
+  payload       Json?
+  processed     Boolean   @default(false)
+  publishedAt   DateTime? @map("published_at") @db.Timestamptz()
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([aggregateType, aggregateId], map: "idx_event_log_aggregate")
+  @@index([processed], map: "idx_event_log_processed", where: "processed = false")
+  @@map("event_log")
+}
+
+model Submission {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId    String?          @unique @map("application_id") @db.Uuid
+  payload          Json?
+  status           SubmissionStatus @default(queued)
+  attempts         Int              @default(0)
+  externalReference String?         @map("external_reference")
+  lastError        String?          @map("last_error")
+  queuedAt         DateTime         @default(now()) @map("queued_at") @db.Timestamptz()
+  lastAttemptAt    DateTime?        @map("last_attempt_at") @db.Timestamptz()
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  application VatApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@index([status], map: "idx_submissions_status")
+  @@map("submissions")
+}
+
+model Filing {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taxpayerId String?       @map("taxpayer_id") @db.Uuid
+  period    String
+  payload   Json
+  status    FilingStatus   @default(pending)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  taxpayer  Organisation? @relation(fields: [taxpayerId], references: [id], onDelete: SetNull)
+  amendments Amendment[]
+  claims    Claim[] @relation("FileIdRelation")
+
+  @@map("filings")
+}
+
+model Amendment {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  filingId        String    @map("filing_id") @db.Uuid
+  amendmentData   Json?
+  status          String?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  filing Filing @relation(fields: [filingId], references: [id], onDelete: Cascade)
+
+  @@map("amendments")
+}
+
+model Claim {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  filingId          String?   @map("filing_id") @db.Uuid
+  taxpayerId        String?   @map("taxpayer_id") @db.Uuid
+  amount            Decimal   @db.Numeric(14, 2)
+  reason            String?
+  status            String?
+  externalReference String?   @map("external_reference")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  filing   Filing?        @relation("FileIdRelation", fields: [filingId], references: [id], onDelete: SetNull)
+  taxpayer Organisation? @relation(fields: [taxpayerId], references: [id], onDelete: SetNull)
+
+  @@map("claims")
+}
+
+model WorkflowInstance {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workflowType  String    @map("workflow_type")
+  state         Json?
+  status        String?
+  correlationId String?   @map("correlation_id") @db.Uuid
+  startedAt     DateTime  @default(now()) @map("started_at") @db.Timestamptz()
+  lastUpdated   DateTime  @default(now()) @updatedAt @map("last_updated") @db.Timestamptz()
+
+  @@index([correlationId], map: "idx_workflow_correlation")
+  @@map("workflow_instances")
+}
