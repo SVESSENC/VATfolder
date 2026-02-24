@@ -15,8 +15,8 @@ flowchart LR
     PG[(Azure Database for PostgreSQL)]
     RC[(Azure Cache for Redis)]
     BL[(Azure Blob Storage)]
-    KV[Azure Key Vault]
-    MON[Azure Monitor + App Insights]
+    KV[Vault on Azure]
+    MON[OpenTelemetry + Prometheus + Grafana + Loki + Tempo]
   end
 
   U --> FD

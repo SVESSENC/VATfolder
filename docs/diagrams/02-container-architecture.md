@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart TB
-  FE[Frontend\nNext.js] --> GATE[API Layer\nControllers + DTO Validation]
+  FE[Frontend\nVite + React] --> GATE[API Layer\nControllers + DTO Validation]
   GATE --> AUTH[Auth Module\nMitID + RBAC]
   GATE --> APP[Application Module\nDraft/Validate/Submit]
   GATE --> DOC[Document Module]

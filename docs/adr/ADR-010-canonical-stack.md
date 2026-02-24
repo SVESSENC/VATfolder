@@ -3,7 +3,7 @@
 Status: Accepted
 
 Decision
-- Standardize on Next.js (React + TypeScript) for frontend and NestJS on Node.js 22 LTS for backend.
+- Standardize on Vite + React + TypeScript for frontend and NestJS on Node.js 22 LTS for backend.
 
 Rationale
 - End-to-end TypeScript reduces drift, simplifies shared contracts, and aligns with team hiring/practices.

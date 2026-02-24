@@ -1,36 +1,30 @@
 ---
-title: Orchestrator + Event Bus Architecture
+title: Orchestrator + Event Bus Architecture (Proposed Target State)
 ---
+
+This diagram represents a proposed future architecture (ADR-006, status: Proposed), not the canonical MVP runtime.
 
 ```mermaid
 flowchart LR
   subgraph UI
-    A[Taxpayer or Representative]\n(Self-Service Portal UI) --> B[Portal BFF]
+    A[Taxpayer or Representative]
+    B[Self-Service Portal UI]
+    C[Portal BFF]
+    A --> B --> C
   end
 
-  B --> C[Tax Core API Layer]
-  C --> D[Orchestrator Service]\n  D --> E[Validation Service]
-  D --> F[Tax Core Engine\n(Rules Engine)]
+  C --> D[Tax Core API Layer]
+  D --> E[Orchestrator Service]
+  E --> F[Validation Service]
+  E --> G[Tax Core Engine\n(Rules Engine)]
 
-  C -->|publishes| EB[(Event Bus)]
-  D -->|publishes events| EB
+  D -->|publishes| EB[(Event Bus)]
   E -->|publishes| EB
   F -->|publishes| EB
+  G -->|publishes| EB
 
-  EB --> G[Audit Sink\n(append-only store)]
-  EB --> H[Audit and Reporting]
-  EB --> I[External Claims System Connector]
-  EB --> J[ERP / Bookkeeping Connector]
-
-  style A fill:#f8f0ff,stroke:#a58cff
-  style B fill:#f8f0ff,stroke:#a58cff
-  style C fill:#efe4ff,stroke:#b88bff
-  style D fill:#efe4ff,stroke:#b88bff
-  style E fill:#efe4ff,stroke:#b88bff
-  style F fill:#efe4ff,stroke:#b88bff
-  style EB fill:#fff0f8,stroke:#ffb6e3
-  style G fill:#f3f3ff,stroke:#b0b0ff
-
-  click EB "#" "Event Bus (conceptual)"
-```
+  EB --> H[Audit Sink\n(append-only store)]
+  EB --> I[Audit and Reporting]
+  EB --> J[External Claims System Connector]
+  EB --> K[ERP or Bookkeeping Connector]
 ```

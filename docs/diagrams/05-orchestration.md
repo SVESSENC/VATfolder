@@ -1,3 +1,7 @@
+# Delivery Orchestration (Process Diagram)
+
+This diagram describes cross-role delivery handoffs. It is not the runtime service architecture.
+
 ```mermaid
 flowchart LR
   subgraph Intake
@@ -23,12 +27,11 @@ flowchart LR
   A -->|API contracts| D
   D -->|design specs| Dev
   Dev -->|code + tests| P
-  P -->|deployments & runbooks| Rev
-  Rev -->|sign-off / feedback| A
+  P -->|deployments + runbooks| Rev
+  Rev -->|sign-off + feedback| A
 
-  %% governance notes
-  classDef notes fill:#f9f,stroke:#333,stroke-width:1px;
-  Notes([Decision rules & acceptance gates:\n- Legal traceability required\n- CI green + infra checks for release\n- Researcher+Architect resolve legal/UX conflicts])
+  classDef notes fill:#f5f5f5,stroke:#333,stroke-width:1px;
+  Notes([Decision rules and acceptance gates:\n- Legal traceability required\n- CI green plus infra checks for release\n- Researcher and Architect resolve legal/UX conflicts])
   Notes:::notes
   Notes -.-> R
   Notes -.-> A

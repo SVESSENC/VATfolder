@@ -1,4 +1,4 @@
-# ADR-003: Azure Managed Services
+# ADR-003: Azure Hosting with OSS Application Tooling
 
 - Date: 2026-02-24
 - Status: Accepted
@@ -7,13 +7,14 @@
 Platform needs operational reliability, secure defaults, and EU data residency alignment.
 
 ## Decision
-Prefer Azure managed services for core runtime, storage, and observability.
+Use Azure as the hosting platform while preferring open-source technologies for application runtime, observability, and secrets where practical.
 
 ## Rationale
-- Strong managed offerings for Postgres, Redis, secrets, and monitoring.
-- Reduces operational burden and patching risk.
-- Aligns with regional hosting/compliance expectations.
+- Azure provides regional hosting, identity, and operational maturity aligned with compliance needs.
+- Open-source application technologies keep architecture portable and reduce vendor lock-in.
+- This balances delivery speed with long-term flexibility.
 
 ## Consequences
 - Positive: Faster path to production readiness.
-- Negative: Increased cloud-provider coupling.
+- Positive: Better portability across providers due to OSS technology choices.
+- Negative: Some additional operational overhead compared with fully managed proprietary tooling.

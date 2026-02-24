@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart LR
-  U[Business User] --> FE[Web App\nNext.js + TypeScript]
+  U[Business User] --> FE[Web App\nVite + React + TypeScript]
   ADM[Internal Admin] --> FE
 
   FE --> API[Backend API\nNestJS Modular Monolith]
@@ -17,6 +17,6 @@ flowchart LR
   API --> REDIS[(Redis Queue/Cache)]
   API --> AUDIT[(Audit Events)]
 
-  OBS[Azure Monitor + App Insights + Sentry] -. telemetry .-> API
+  OBS[OpenTelemetry + Prometheus + Grafana + Loki + Tempo] -. telemetry .-> API
   OBS -. telemetry .-> FE
 ```

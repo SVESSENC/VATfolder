@@ -4,13 +4,14 @@
 - Compliance-first: every core choice must support Danish/EU data protection, traceability, and auditability.
 - Boring over trendy: pick mature tools with strong long-term support and hiring availability.
 - Replaceable boundaries: use clean APIs and adapters so integrations (MitID, SKAT/Virk) can evolve without rewrites.
-- Managed services first: reduce operational risk and focus engineering time on domain logic.
+- OSS-first application stack on Azure: keep runtime/tooling portable while using Azure for hosting and managed data services.
 
 ## Core Stack We Will Use
 
 ### Frontend
-- Framework: **Next.js (React + TypeScript)**
-- UI system: **Tailwind CSS + Radix UI primitives**
+- Framework: **Vite + React + TypeScript**
+- Routing: **React Router**
+- UI system: **Tailwind CSS**
 - Forms/validation: **React Hook Form + Zod**
 - Why:
   - Type-safe UI and API contracts.
@@ -56,14 +57,14 @@
 
 ### Observability and Operations
 - Logs: **Structured JSON logs (OpenTelemetry-compatible)**
-- Metrics/tracing: **OpenTelemetry + Azure Monitor / Application Insights**
-- Error tracking: **Sentry**
+- Metrics/tracing: **OpenTelemetry + Prometheus + Grafana + Tempo**
+- Log aggregation: **Loki**
 - Audit events: **Append-only audit table + hash/checksum fields**
 - Why:
   - Gives legal traceability and operational visibility from day one.
 
 ### Security
-- Secrets: **Azure Key Vault**
+- Secrets: **HashiCorp Vault** (self-hosted on Azure)
 - Encryption at rest: managed disk/db encryption + column-level encryption for sensitive identifiers
 - Encryption in transit: TLS 1.2+
 - Supply chain: **Dependabot/Renovate + SCA + image scanning**
@@ -110,7 +111,7 @@
 ## Architecture Decision Log Seed
 - ADR-001: TypeScript end-to-end for faster delivery and contract consistency.
 - ADR-002: Modular monolith before microservices.
-- ADR-003: Azure managed services for compliance and operational maturity.
+- ADR-003: Azure hosting with OSS application tooling.
 - ADR-004: Adapter architecture for all external government/identity integrations.
 
 ## Why Not Python/FastAPI (For This Project)
