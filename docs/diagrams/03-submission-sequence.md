@@ -11,7 +11,7 @@ sequenceDiagram
   participant SKAT as SKAT/Virk
 
   User->>FE: Complete VAT form and submit
-  FE->>API: POST /applications/{id}/submit
+  FE->>API: POST /api/v1/applications/{id}/submit
   API->>DB: Persist submission intent + audit event
   API->>Q: Enqueue submission job
   API-->>FE: 202 Accepted (queued)

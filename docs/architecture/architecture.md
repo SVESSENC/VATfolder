@@ -6,6 +6,7 @@ This document describes a practical, buildable system for supporting the main st
 - Legal and API specifics (SKAT/Virk endpoints, required payloads) will be validated by `researcher` before implementation.
 - Users will authenticate with MitID (business/corporate flows where applicable). Confirm MitID product and scope with `researcher`/integrations.
 - CVR and company data will be used for pre-fill via public CVR APIs where permitted.
+ - This document follows tech-stack.md as source of truth.
 
 **User workflow (high-level steps mapped to registration tasks)**
 1. Validate need to register: present short questionnaire to determine VAT obligation.
@@ -18,7 +19,8 @@ This document describes a practical, buildable system for supporting the main st
 
 **System components**
 - Web frontend (SPA) — lightweight React/TypeScript or Vue: forms, flows, status dashboard.
-- Backend API — FastAPI (Python) or Node/Express/TypeScript: business logic, validation, integration adapters.
+ - Web frontend (SPA) — Next.js (React + TypeScript): forms, flows, status dashboard.
+ - Backend API — NestJS on Node.js 22 LTS: business logic, validation, integration adapters.
 - Auth layer — MitID connector (OIDC/SSO) plus RBAC for internal users.
 - Data store — PostgreSQL for core domain data and audit trails.
 - Document store — S3-compatible blob store for uploaded docs (encrypted).
@@ -35,12 +37,12 @@ This document describes a practical, buildable system for supporting the main st
 - AuditEvent — who, what, when, payload-hash.
 
 **API contracts (examples)**
-- POST /applications
+ - POST /api/v1/applications
   - Request: application payload + attachments refs
   - Response: application id, validation warnings
-- GET /applications/{id}
+ - GET /api/v1/applications/{id}
   - Response: full state, status, SKAT_reference if available
-- POST /applications/{id}/submit
+ - POST /api/v1/applications/{id}/submit
   - Response: submission result or queued status
 
 Detailed contract schemas will be defined during the `Define API contracts` TODO and validated by `researcher` for required fields.
@@ -49,6 +51,8 @@ Detailed contract schemas will be defined during the `Define API contracts` TODO
 - MitID: OIDC flows for user authentication and business authentication. Confirm required scopes and enterprise flows.
 - CVR API: pre-fill business data and validate CVR existence.
 - SKAT/Virk: final submission endpoint(s) — may be direct API or manual upload. `researcher` to confirm available endpoints and required security (e.g., certificate-based TLS/MTLS, signed payloads).
+ - SKAT/Virk: final submission endpoint(s) — may be direct API or manual upload. `researcher` to confirm available endpoints and required security (e.g., certificate-based TLS/MTLS, signed payloads).
+  - Webhook security: callbacks from SKAT must be validated using a signature header (e.g. `X-SKAT-Signature`) and a timestamp header (e.g. `X-SKAT-Timestamp`). Consumers must reject replayed requests outside an acceptable window and return 401/403 on signature failure.
 - e-Boks / email: delivery of confirmations and follow-ups.
 
 **Security, privacy, and compliance**
@@ -104,9 +108,8 @@ Detailed contract schemas will be defined during the `Define API contracts` TODO
 - `developer`: implementation, tests, and deployment.
 - `reviewer`: compliance sign-off and checklist.
 
-If you want, I will: (a) create `legal-scope.md` stub for `researcher` to fill, (b) generate an initial DB schema and OpenAPI skeleton. Which should I do next?
-
 **Architecture decision log**
 - See docs/adr/README.md for ADR index and full records.
+- See ADRs: ADR-006-orchestrator-eventbus.md, ADR-007-api-versioning.md, ADR-008-auth-by-default.md, ADR-009-idempotency.md, ADR-010-canonical-stack.md
 
 

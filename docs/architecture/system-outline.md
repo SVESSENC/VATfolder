@@ -20,15 +20,17 @@ User workflows (seven steps)
 7. Post-Registration: produce compliance checklist and reminders.
 
 Minimal API surface (summary)
-- Auth: `POST /auth/oidc/initiate`, `GET /auth/oidc/callback`
-- Organisation: `GET /organisations?cvr={cvr}`
-- Obligation: `POST /assess/obligation`
-- Applications: `POST /applications`, `GET /applications/{id}`, `PUT /applications/{id}`
-- Documents: `POST /applications/{id}/documents`, `GET /applications/{id}/documents/{docId}`
-- Validation: `POST /applications/{id}/validate`, `GET /validation/rulesets`
-- Submissions: `POST /applications/{id}/submit`, `GET /submissions/{submissionId}/status`
-- Corrections and Claims: `POST /applications/{id}/corrections`, `POST /applications/{id}/claims`
-- Audit: `GET /audit?objectType=VATApplication&objectId={id}`
+- Auth: `POST /api/v1/auth/oidc/initiate`, `GET /api/v1/auth/oidc/callback`
+- Organisation: `GET /api/v1/organisations?cvr={cvr}`
+- Obligation: `POST /api/v1/assess/obligation`
+- Applications: `POST /api/v1/applications`, `GET /api/v1/applications/{id}`, `PUT /api/v1/applications/{id}`
+- Documents: `POST /api/v1/applications/{id}/documents`, `GET /api/v1/applications/{id}/documents/{docId}`
+- Validation: `POST /api/v1/applications/{id}/validate`, `GET /api/v1/validation/rulesets`
+- Submissions: `POST /api/v1/applications/{id}/submit`, `GET /api/v1/submissions/{submissionId}/status`
+- Corrections and Claims: `POST /api/v1/applications/{id}/corrections`, `POST /api/v1/applications/{id}/claims`
+- Filings & Claims: `POST /api/v1/filings`, `GET /api/v1/filings/{filingId}`, `POST /api/v1/filings/{filingId}/amendments`, `POST /api/v1/claims`
+- Admin queue: `GET /api/v1/queue/queued-submissions`, `POST /api/v1/submissions/{submissionId}/retry`
+- Audit: `GET /api/v1/audit?objectType=VATApplication&objectId={id}`
 
 Data model (key entities)
 - `users`

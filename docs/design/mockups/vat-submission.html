@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VAT Submission — Mockup</title>
+  <style>
+    :root{--accent:#047857;--muted:#e5e7eb;--bg:#f7faf9}
+    body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);margin:0;color:#0f172a}
+    .wrap{max-width:980px;margin:28px auto;padding:20px}
+    .card{background:#fff;border:1px solid var(--muted);border-radius:10px;padding:20px}
+    h1{margin:0 0 6px 0;font-size:20px}
+    .muted{color:#6b7280;font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    label{display:block;font-size:13px;color:#374151;margin-bottom:6px}
+    input[type=text],select,textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;background:#fff}
+    textarea{min-height:100px}
+    .full{grid-column:1/-1}
+    .row{display:flex;gap:8px}
+    .btn{background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none;display:inline-block}
+    .btn-ghost{background:#fff;border:1px solid var(--muted);padding:10px 14px;border-radius:8px}
+    .files{padding:12px;border:1px dashed #d1d5db;border-radius:8px;background:#f8faf9}
+    .small{font-size:13px;color:#475569}
+    .notice{padding:10px;border-radius:8px;background:#effaf6;border:1px solid #d1fae5;color:#065f46;margin-bottom:12px}
+    .foot{margin-top:14px;color:#6b7280;font-size:13px}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Danish VAT Return — Momsangivelse</h1>
+      <p class="muted">Fill the period return fields below. Amounts are DKK. Rubrik fields are values (excl. VAT).</p>
+
+      <div class="notice">This mockup mirrors the canonical Danish VAT return boxes (Salgsmoms, Kobsmoms, Rubrik A/B/C, reverse-charge fields).</div>
+
+      <form id="vatForm">
+        <div class="grid">
+          <div>
+            <label>Filing period</label>
+            <input type="text" id="period" placeholder="YYYY-MM (e.g. 2026-02)" />
+          </div>
+          <div>
+            <label>CVR number</label>
+            <input type="text" id="cvr" placeholder="12345678" />
+          </div>
+
+          <hr style="grid-column:1/-1;border:none;border-top:1px solid #eef2f7;margin:8px 0 12px 0">
+
+          <div class="full"><strong>1) Domestic VAT amounts (DKK)</strong></div>
+
+          <div>
+            <label>Salgsmoms (Output VAT)</label>
+            <input type="text" id="salgsmoms" class="amount" placeholder="0.00" />
+          </div>
+          <div>
+            <label>Kobsmoms (Input VAT)</label>
+            <input type="text" id="kobsmoms" class="amount" placeholder="0.00" />
+          </div>
+
+          <div class="full"><strong>2) Reverse-charge purchase VAT (self-assessed)</strong></div>
+
+          <div>
+            <label>Moms af varekøb i udlandet (goods purchases)</label>
+            <input type="text" id="varekob" class="amount" placeholder="0.00" />
+          </div>
+          <div>
+            <label>Moms af ydelseskøb i udlandet (services, reverse charge)</label>
+            <input type="text" id="ydelseskob" class="amount" placeholder="0.00" />
+          </div>
+
+          <div class="full"><strong>3) Cross-border value boxes (Rubrik — values excl. VAT)</strong></div>
+
+          <div>
+            <label>Rubrik A — Varer (EU goods purchases, excl. VAT)</label>
+            <input type="text" id="rubrikA_varer" placeholder="0.00" />
+          </div>
+          <div>
+            <label>Rubrik A — Ydelser (EU services purchases, excl. VAT)</label>
+            <input type="text" id="rubrikA_ydelser" placeholder="0.00" />
+          </div>
+
+          <div>
+            <label>Rubrik B — Varer (EU sales to VAT-registered businesses)</label>
+            <input type="text" id="rubrikB_varer" placeholder="0.00" />
+          </div>
+          <div>
+            <label>Rubrik B — Varer (triangular trade)</label>
+            <input type="text" id="rubrikB_tri" placeholder="0.00" />
+          </div>
+          <div>
+            <label>Rubrik B — Ydelser (services sold, buyer accounts elsewhere)</label>
+            <input type="text" id="rubrikB_ydelser" placeholder="0.00" />
+          </div>
+
+          <div class="full">
+            <label>Rubrik C — Export (non-EU sales, excl. VAT)</label>
+            <input type="text" id="rubrikC" placeholder="0.00" />
+          </div>
+
+          <div class="full"><strong>4) Reconciliation & Evidence</strong></div>
+
+          <div class="full">
+            <label>Reconciliation notes (optional)</label>
+            <textarea id="notes" placeholder="Ledger references, adjustments, evidence summary"></textarea>
+          </div>
+
+          <div class="full">
+            <label>Supporting evidence</label>
+            <div class="row">
+              <div style="flex:1" class="files">Drag & drop transaction evidence (PDF / CSV)</div>
+              <div style="width:140px"><a class="btn-ghost" href="#">Add files</a></div>
+            </div>
+            <p class="small">Note: every non-zero Rubrik or reverse-charge field should have drill-down evidence retained.</p>
+          </div>
+
+          <div class="full">
+            <label>Calculated net VAT position</label>
+            <input type="text" id="netVat" readonly style="font-weight:600;background:#f8faf9" />
+            <p class="small">Net VAT = Salgsmoms - Kobsmoms + Moms af varekøb + Moms af ydelseskøb</p>
+          </div>
+
+          <div class="full">
+            <label>Declaration</label>
+            <div style="display:flex;gap:12px;align-items:center">
+              <input type="checkbox" id="decl" />
+              <label for="decl" class="small">I confirm the values are complete and correct (required to submit).</label>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px">
+          <div>
+            <a class="btn-ghost" href="#">Cancel</a>
+          </div>
+          <div style="display:flex;gap:10px">
+            <a class="btn-ghost" href="#" id="saveDraft">Save draft</a>
+            <a class="btn" href="#" id="toSign">Proceed to MitID sign</a>
+          </div>
+        </div>
+
+        <p class="foot">On signing, the package is submitted to SKAT. Keep reconciliation evidence for audit.</p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // simple numeric parse helper
+    function toNum(v){
+      if(!v) return 0;
+      v = String(v).replace(/[, ]+/g,'');
+      var n = parseFloat(v);
+      return isNaN(n)?0:n;
+    }
+    function calcNet(){
+      var salg = toNum(document.getElementById('salgsmoms').value);
+      var kob = toNum(document.getElementById('kobsmoms').value);
+      var vare = toNum(document.getElementById('varekob').value);
+      var yd = toNum(document.getElementById('ydelseskob').value);
+      var net = (salg - kob + vare + yd);
+      document.getElementById('netVat').value = net.toFixed(2);
+    }
+    document.querySelectorAll('.amount').forEach(function(el){el.addEventListener('input',calcNet)});
+    document.getElementById('salgsmoms').addEventListener('input',calcNet);
+    document.getElementById('kobsmoms').addEventListener('input',calcNet);
+    document.getElementById('varekob').addEventListener('input',calcNet);
+    document.getElementById('ydelseskob').addEventListener('input',calcNet);
+  </script>
+</body>
+</html>

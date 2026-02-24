@@ -6,10 +6,13 @@ info:
 servers:
   - url: https://api.example.local
     description: Local dev / sandbox
+security:
+  - mitid: []
 
 paths:
-  /auth/oidc/initiate:
+  /api/v1/auth/oidc/initiate:
     post:
+      security: []
       summary: Initiate MitID OIDC authentication (redirect URL)
       tags:
         - auth
@@ -32,8 +35,9 @@ paths:
                   authUrl:
                     type: string
 
-  /auth/oidc/callback:
+  /api/v1/auth/oidc/callback:
     get:
+      security: []
       summary: OIDC callback endpoint
       tags:
         - auth
@@ -46,7 +50,7 @@ paths:
         '200':
           description: Tokens / user session created
 
-  /organisations:
+  /api/v1/organisations:
     get:
       summary: Lookup organisation by CVR
       tags:
@@ -67,7 +71,7 @@ paths:
         '404':
           description: Not found
 
-  /assess/obligation:
+  /api/v1/assess/obligation:
     post:
       summary: Assess VAT obligation for an organisation
       tags:
@@ -91,7 +95,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AssessmentResult'
 
-  /applications:
+  /api/v1/applications:
     post:
       summary: Create a VAT registration application (draft)
       tags:
@@ -117,8 +121,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
-  /applications/{applicationId}:
+  /api/v1/applications/{applicationId}:
     get:
       summary: Get application by id
       tags:
@@ -136,8 +158,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VATApplicationResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
       summary: Update application draft
       tags:
@@ -151,8 +195,39 @@ paths:
       responses:
         '200':
           description: Updated
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict - stale update (If-Match/ETag mismatch)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+        - name: If-Match
+          in: header
+          description: ETag value for optimistic concurrency control
+          required: true
+          schema:
+            type: string
 
-  /applications/{applicationId}/documents:
+  /api/v1/applications/{applicationId}/documents:
     post:
       summary: Upload a document for an application
       tags:
@@ -190,7 +265,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Document'
 
-  /applications/{applicationId}/validate:
+  /api/v1/applications/{applicationId}/validate:
     post:
       summary: Validate application against legal ruleset
       tags:
@@ -203,7 +278,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationResult'
 
-  /applications/{applicationId}/assess:
+  /api/v1/applications/{applicationId}/assess:
     post:
       summary: Run domain assessment for a saved application
       tags:
@@ -216,11 +291,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/AssessmentResult'
 
-  /applications/{applicationId}/submit:
+  /api/v1/applications/{applicationId}/submit:
     post:
       summary: Submit application to SKAT (async)
       tags:
         - submissions
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          description: Client-provided idempotency key
+          required: true
+          schema:
+            type: string
       responses:
         '202':
           description: Accepted (queued)
@@ -229,7 +311,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SubmissionResult'
 
-  /submissions/{submissionId}/status:
+  /api/v1/submissions/{submissionId}/status:
     get:
       summary: Get submission status
       tags:
@@ -248,11 +330,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/SubmissionResult'
 
-  /integrations/skats/callback:
+  /api/v1/integrations/skats/callback:
     post:
       summary: SKAT callback webhook for submission updates
       tags:
         - integrations
+      parameters:
+        - name: X-SKAT-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-SKAT-Timestamp
+          in: header
+          required: true
+          schema:
+            type: string
+      description: |-
+        SKAT will sign payloads with `X-SKAT-Signature` and include `X-SKAT-Timestamp`.
+        Consumers must validate the signature and reject replayed timestamps outside an acceptable window.
       requestBody:
         required: true
         content:
@@ -262,26 +358,134 @@ paths:
       responses:
         '200':
           description: Received
+        '401':
+          description: Unauthorized - signature missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - signature validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
-  /applications/{applicationId}/corrections:
+  /api/v1/applications/{applicationId}/corrections:
     post:
       summary: Submit a correction for an application
       tags:
         - corrections
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Correction accepted
 
-  /applications/{applicationId}/claims:
+  /api/v1/applications/{applicationId}/claims:
     post:
       summary: Submit a claim for an application
       tags:
         - claims
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Claim accepted
 
-  /audit:
+  /api/v1/filings:
+    post:
+      summary: Submit a filing
+      tags:
+        - filings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilingCreate'
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Accepted (processing asynchronously)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilingResponse'
+
+  /api/v1/filings/{filingId}:
+    get:
+      summary: Get filing status
+      tags:
+        - filings
+      parameters:
+        - name: filingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Filing status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilingStatus'
+
+  /api/v1/filings/{filingId}/amendments:
+    post:
+      summary: Submit an amendment for a filing
+      tags:
+        - filings
+      parameters:
+        - name: filingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmendmentCreate'
+      responses:
+        '202':
+          description: Amendment accepted
+
+  /api/v1/claims:
+    post:
+      summary: Submit a claim
+      tags:
+        - claims
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimCreate'
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Claim accepted (async)
+
+  /api/v1/audit:
     get:
       summary: Query audit events
       tags:
@@ -305,7 +509,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/AuditEvent'
 
-  /queue/queued-submissions:
+  /api/v1/queue/queued-submissions:
     get:
       summary: Admin: list queued submissions
       tags:
@@ -314,7 +518,7 @@ paths:
         '200':
           description: Queue list
 
-  /submissions/{submissionId}/retry:
+  /api/v1/submissions/{submissionId}/retry:
     post:
       summary: Admin: retry a queued submission
       tags:
@@ -328,6 +532,54 @@ paths:
       responses:
         '200':
           description: Retry scheduled
+
+  /api/v1/applications/{applicationId}/documents/{docId}:
+    get:
+      summary: Get uploaded document metadata
+      tags:
+        - documents
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: docId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '404':
+          description: Not found
+
+  /api/v1/validation/rulesets:
+    get:
+      summary: List available validation rulesets
+      tags:
+        - validation
+      responses:
+        '200':
+          description: Ruleset list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    version:
+                      type: string
+                    description:
+                      type: string
 
 components:
   securitySchemes:
@@ -379,7 +631,15 @@ components:
           format: uuid
         status:
           type: string
-          description: application_status (draft|validated|queued|submitted|accepted|rejected|needs_info)
+          description: application_status
+          enum:
+            - draft
+            - validated
+            - queued
+            - submitted
+            - accepted
+            - rejected
+            - needs_info
         validationWarnings:
           type: array
           items:
@@ -396,6 +656,7 @@ components:
         cvr:
           type: string
           description: Danish CVR number (8 digits)
+          pattern: '^[0-9]{8}$'
         name:
           type: string
         addresses:
@@ -438,6 +699,7 @@ components:
           format: date-time
         url:
           type: string
+          format: uri
 
     ValidationResult:
       type: object
@@ -566,6 +828,7 @@ components:
               type: string
             email:
               type: string
+              format: email
         attachments:
           type: array
           items:
@@ -584,3 +847,63 @@ components:
           phone: "+45 12 34 56 78"
           email: "info@acme.example"
         attachments: []
+    
+    FilingCreate:
+      type: object
+      required:
+        - taxpayerId
+        - period
+        - payload
+      properties:
+        taxpayerId:
+          type: string
+        period:
+          type: string
+        payload:
+          type: object
+
+    FilingResponse:
+      type: object
+      properties:
+        filingId:
+          type: string
+        status:
+          type: string
+
+    FilingStatus:
+      type: object
+      properties:
+        filingId:
+          type: string
+        status:
+          type: string
+        events:
+          type: array
+          items:
+            type: object
+
+    AmendmentCreate:
+      type: object
+      properties:
+        amendmentId:
+          type: string
+        changes:
+          type: object
+        reason:
+          type: string
+
+    ClaimCreate:
+      type: object
+      required:
+        - taxpayerId
+        - amount
+      properties:
+        taxpayerId:
+          type: string
+        filingId:
+          type: string
+        amount:
+          type: number
+          format: double
+        reason:
+          type: string

@@ -319,3 +319,26 @@ Acceptance criteria:
 - Every VAT treatment decision has a documentation requirement attached.
 - Every recurring obligation has owner, due date, and escalation path.
 - High-risk edge cases are explicitly tagged for specialist review.
+
+## 24) Danish VAT return form deep-dive (layout and required fields)
+
+Added deliverable:
+- `docs/research/danish-vat-return-form.md`
+
+What this adds:
+- Source-backed description of how the Danish VAT return is structured in TastSelv Erhverv.
+- Field-by-field specification for VAT amount fields and Rubrik A/B/C value boxes.
+- Legal mapping to `momsbekendtgorelsen` sections 76-79.
+- Implementation-oriented validation, reconciliation controls, and minimum evidence package.
+
+Primary sources used in this deep-dive:
+- [SKAT-EU-PURCHASES-DA-FORM]
+  - https://skat.dk/erhverv/moms/moms-ved-handel-med-udlandet/moms-ved-handel-med-virksomheder/moms-ved-handel-med-lande-i-eu/moms-ved-koeb-af-varer-og-ydelser-i-eu
+- [SKAT-EU-SALES-DA-FORM]
+  - https://skat.dk/erhverv/moms/moms-ved-handel-med-udlandet/moms-ved-handel-med-virksomheder/moms-ved-handel-med-lande-i-eu/moms-ved-salg-af-varer-og-ydelser-i-eu
+- [SKAT-NON-EU-SALES-DA-FORM]
+  - https://skat.dk/erhverv/moms/moms-ved-handel-med-udlandet/moms-ved-handel-med-virksomheder/moms-ved-handel-med-lande-uden-for-eu/moms-ved-salg-af-varer-og-ydelser-i-lande-uden-for-eu
+- [RETS-MOMSBEK-FORM]
+  - https://www.retsinformation.dk/api/pdf/240229
+- [RETS-MOMSLOV-FORM]
+  - https://www.retsinformation.dk/api/pdf/241297

@@ -14,3 +14,6 @@
 2. Read `docs/architecture/architecture.md`
 3. Review `docs/diagrams/README.md`
 4. Implement against `api/openapi.yaml` and `database/db_schema.sql`
+
+## Architecture Decisions
+- See `docs/adr/` for the ADR index and specific decisions (e.g., ADR-006, ADR-007, ADR-008, ADR-009, ADR-010).

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VAT Portal — Mockup</title>
+  <style>
+    :root{--accent:#2563eb;--success:#10b981;--muted:#e6edf3;--bg:#f7fbff}
+    body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);margin:0;color:#0f172a}
+    header{background:#fff;border-bottom:1px solid #e6edf3;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+    .brand{font-weight:600}
+    .container{max-width:1100px;margin:20px auto;padding:0 18px}
+    .grid{display:grid;grid-template-columns:1fr 320px;gap:18px}
+    .card{background:#fff;border:1px solid #e6edf3;border-radius:10px;padding:16px}
+    .btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none}
+    .btn-ghost{background:#fff;border:1px solid #e6edf3;padding:8px 12px;border-radius:8px}
+    .apps-list{display:grid;gap:10px}
+    .app-row{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid #f1f5f9}
+    .muted{color:#6b7280;font-size:13px}
+    nav.side{padding:10px}
+    .wizard{display:grid;gap:8px}
+    .steps{display:flex;gap:8px;margin-bottom:12px}
+    .step{padding:8px 10px;border-radius:6px;background:#f8fafc;border:1px solid #eef2f7;font-size:13px}
+    .active{background:linear-gradient(90deg,#eef2ff,#fff);border-color:#dbeafe}
+    .field{margin-bottom:8px}
+    input,select,textarea{width:100%;padding:8px;border:1px solid #e6edf3;border-radius:6px}
+    .small{font-size:13px;color:#475569}
+    footer{max-width:1100px;margin:18px auto;padding:0 18px;color:#6b7280;font-size:13px}
+    @media(max-width:880px){.grid{grid-template-columns:1fr}.side{display:none}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">VAT Portal — Self-Service (mockup)</div>
+    <div>
+      <a class="btn-ghost" href="#" id="operatorToggle">Operator View</a>
+      <a class="btn" href="#" id="loginBtn">Sign in with MitID</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <main>
+        <div class="card" id="dashboardView">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div>
+              <h2 style="margin:0">Dashboard</h2>
+              <div class="muted">Your applications and statuses</div>
+            </div>
+            <div>
+              <a class="btn" id="newAppBtn" href="#">Create new application</a>
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <input id="search" placeholder="Search by CVR or ID" style="padding:8px;width:100%;border:1px solid #eef2f7;border-radius:6px" />
+          </div>
+
+          <div class="apps-list" id="appsList">
+            <!-- sample rows -->
+            <div class="app-row"><div><strong>APP-2026-0001</strong> — Example ApS</div><div class="small">Status: <strong>Draft</strong></div></div>
+            <div class="app-row"><div><strong>APP-2026-0002</strong> — SalesCo</div><div class="small">Status: <strong>Queued</strong></div></div>
+            <div class="app-row"><div><strong>APP-2025-0999</strong> — Exporter A</div><div class="small">Status: <strong style="color:var(--success)">Submitted</strong></div></div>
+          </div>
+        </div>
+
+        <div class="card" id="wizardView" style="margin-top:14px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div>
+              <h3 style="margin:0">Create application — Step <span id="stepIndex">1</span> of 7</h3>
+              <div class="muted">Quick wizard to create a VAT application</div>
+            </div>
+            <div><a class="btn-ghost" href="#" id="wizardCancel">Cancel</a></div>
+          </div>
+
+          <div class="steps" id="stepsBar"></div>
+
+          <div class="wizard" id="wizardContent">
+            <!-- step content injected here -->
+          </div>
+
+          <div style="display:flex;justify-content:space-between;margin-top:12px">
+            <div><a class="btn-ghost" href="#" id="prevStep">Back</a></div>
+            <div style="display:flex;gap:8px"><a class="btn-ghost" href="#" id="saveDraftW">Save draft</a><a class="btn" href="#" id="nextStep">Next</a></div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="side">
+        <div class="card">
+          <h4 style="margin:0">At a glance</h4>
+          <div class="small" style="margin-top:8px">Queued submissions: <strong>2</strong></div>
+          <div class="small">Pending reviews: <strong>1</strong></div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h4 style="margin:0">Help & Links</h4>
+          <ul class="small" style="padding-left:18px;margin-top:8px">
+            <li>MitID login</li>
+            <li>CVR lookup</li>
+            <li>Submission history</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <footer>Prototype mockup for the portal plan — use for UX review and API mapping.</footer>
+
+  <script>
+    // wizard data and templates
+    const steps = [
+      'Assessment', 'Identity & Organisation', 'Business details', 'Documents', 'Validation', 'Review', 'Submit'
+    ];
+    let step = 0;
+
+    function renderSteps(){
+      const bar = document.getElementById('stepsBar'); bar.innerHTML='';
+      steps.forEach((s,i)=>{
+        const el=document.createElement('div');el.className='step'+(i===step?' active':'');el.textContent=(i+1)+'. '+s;bar.appendChild(el);
+      })
+    }
+
+    function renderWizard(){
+      document.getElementById('stepIndex').textContent = (step+1);
+      const container = document.getElementById('wizardContent'); container.innerHTML='';
+      if(step===0){
+        container.innerHTML = `
+          <div class="field"><label>Estimated annual turnover (DKK)</label><input id="w_turnover"/></div>
+          <div class="field"><label>Primary activity</label><input id="w_activity"/></div>
+          <div class="small">This step runs the obligation engine to suggest registration need.</div>
+        `;
+      } else if(step===1){
+        container.innerHTML = `
+          <div class="field"><label>Applicant name</label><input id="w_name"/></div>
+          <div class="field"><label>CVR</label><input id="w_cvr"/></div>
+        `;
+      } else if(step===2){
+        container.innerHTML = `
+          <div class="field"><label>Business address</label><input id="w_addr"/></div>
+          <div class="field"><label>Contact email</label><input id="w_email"/></div>
+        `;
+      } else if(step===3){
+        container.innerHTML = `
+          <div class="field"><label>Upload documents</label><div class="small">Drag & drop area</div></div>
+        `;
+      } else if(step===4){
+        container.innerHTML = `
+          <div class="field"><strong>Validation results</strong><div class="small">No blocking errors. Warnings: missing evidence for Rubrik B entries.</div></div>
+        `;
+      } else if(step===5){
+        container.innerHTML = `
+          <div class="field"><label>Review & confirm</label><div class="small">Review summary and legal citations.</div></div>
+        `;
+      } else if(step===6){
+        container.innerHTML = `
+          <div class="field"><strong>Ready to submit</strong><div class="small">You will be redirected to MitID for signing.</div></div>
+        `;
+      }
+    }
+
+    document.getElementById('newAppBtn').addEventListener('click',function(e){e.preventDefault();document.getElementById('dashboardView').style.display='none';document.getElementById('wizardView').style.display='block'; step=0; renderSteps(); renderWizard();});
+    document.getElementById('nextStep').addEventListener('click',function(e){e.preventDefault(); if(step<steps.length-1) step++; renderSteps(); renderWizard();});
+    document.getElementById('prevStep').addEventListener('click',function(e){e.preventDefault(); if(step>0) step--; renderSteps(); renderWizard();});
+    document.getElementById('wizardCancel').addEventListener('click',function(e){e.preventDefault();document.getElementById('dashboardView').style.display='block';document.getElementById('wizardView').style.display='none';});
+
+    // operator toggle (simple stub)
+    let operator=false;
+    document.getElementById('operatorToggle').addEventListener('click',function(e){e.preventDefault();operator=!operator;this.textContent = operator? 'Operator: ON' : 'Operator View';alert('Operator view '+(operator?'enabled':'disabled')+'. Operator UI would appear here.');});
+
+    renderSteps();
+  </script>
+</body>
+</html>
