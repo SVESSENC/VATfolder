@@ -166,3 +166,156 @@ As-of control (Section 11): OSS/SME conditions and thresholds are scheme-based a
   - https://www.retsinformation.dk/api/pdf/231197
 - [EU-VAT-RATES] EU VAT rates framework (European Commission):
   - https://taxation-customs.ec.europa.eu/taxation/vat/vat-directive/vat-rates_en
+
+## 16) Section 14 execution plan - detailed next-step documentation
+
+This section converts the Section 14 structure into executable documentation work packages.
+
+### 16.1 `01-vat-overview.md` - concepts, authorities, legal map
+Purpose:
+- Define VAT architecture for Denmark and where legal authority sits.
+
+Must include:
+- Legal hierarchy: EU VAT Directive -> Danish `Momsloven` -> executive orders/guidance.
+- Core concepts: taxable person, taxable transaction, place of supply, taxable amount, output/input VAT.
+- Authority map: `Skattestyrelsen`, `Motorstyrelsen` (if relevant to trade flows), `virk.dk`, `TastSelv Erhverv`.
+- Source map table with legal references and practical guidance links.
+
+Acceptance criteria:
+- A new team member can identify which source controls each VAT rule category.
+
+### 16.2 `02-registration-thresholds.md` - registration decision tree
+Purpose:
+- Turn threshold and business-status rules into a deterministic onboarding flow.
+
+Must include:
+- DKK 50,000 rolling 12-month threshold logic.
+- Voluntary registration branch.
+- Trigger events: expected turnover jump, cross-border activities, imports, OSS relevance.
+- Required identifiers and setup list: CVR/SE details, VAT registration status, EORI where needed.
+
+Deliverable format:
+- Decision tree + checklist + edge-case notes.
+
+Acceptance criteria:
+- User can answer yes/no questions and land on a clear registration action.
+
+### 16.3 `03-rates-exemptions.md` - taxable vs exempt catalog
+Purpose:
+- Replace generic statements with a mapped matrix.
+
+Must include:
+- Standard 25% domestic treatment baseline.
+- Exemption matrix mapped to `Momsloven` section 13 categories.
+- Distinction between exempt, outside scope, and cross-border no-DK-VAT outcomes.
+- Consequence column: input VAT recovery allowed/blocked/partial.
+
+Deliverable format:
+- Table with: transaction type, legal basis, VAT outcome, deduction impact, documentation required.
+
+Acceptance criteria:
+- Any listed transaction can be classified without ambiguity.
+
+### 16.4 `04-filing-payment-calendar.md` - operational filing calendar and ownership
+Purpose:
+- Build filing execution controls for monthly/quarterly/half-yearly reporters.
+
+Must include:
+- Settlement frequency rules and reassessment triggers.
+- Filing/payment calendar template with cutoff dates, preparer/reviewer/approver owners.
+- Late-filing consequence summary (including provisional assessment fee context).
+- Zero-return control and exception escalation path.
+
+Deliverable format:
+- Monthly close runbook + calendar table.
+
+Acceptance criteria:
+- Team can run VAT close from this document only.
+
+### 16.5 `05-input-vat-deductions.md` - deduction matrix and blocked/partial cases
+Purpose:
+- Define deduction policy and evidence standards.
+
+Must include:
+- Full deduction conditions for taxable business use.
+- Partial deduction framework for mixed taxable/exempt activity.
+- Non-deductible/blocked categories where applicable.
+- Documentation standard for deduction claims (invoice quality, allocation workings, usage evidence).
+
+Deliverable format:
+- Policy rules + worked examples + calculation templates.
+
+Acceptance criteria:
+- Two reviewers applying this policy should reach same deductible amount.
+
+### 16.6 `06-eu-trade.md` - B2B/B2C EU flows, OSS, ESL reporting
+Purpose:
+- Standardize EU transaction VAT treatment.
+
+Must include:
+- B2B goods/services sales and purchases decision logic.
+- Reverse charge conditions and invoice wording requirements.
+- VAT number validation process and evidence retention.
+- ESL/recapitulative statement obligations and timing.
+- OSS scope, threshold context (EUR 10,000), registration/use/zero-declaration handling.
+
+Deliverable format:
+- Flowcharts per transaction pattern + compliance checklist.
+
+Acceptance criteria:
+- For each EU transaction pattern, document states who accounts for VAT and where.
+
+### 16.7 `07-non-eu-trade.md` - import/export VAT and customs touchpoints
+Purpose:
+- Integrate customs and VAT treatment for third-country trade.
+
+Must include:
+- Export zero-rating conditions and required proof set.
+- Import VAT handling and importer-of-record scenarios.
+- Service purchases from non-EU suppliers and reverse charge application.
+- EORI, customs declaration dependencies, and accounting handoff controls.
+
+Deliverable format:
+- Goods and services split + control checklist by role (logistics, finance, tax).
+
+Acceptance criteria:
+- Missing proof/documents are detectable before VAT filing.
+
+### 16.8 `08-controls-audit-readiness.md` - evidence standards, reconciliations, remediation
+Purpose:
+- Build audit-defensible VAT control framework.
+
+Must include:
+- Control library: preventive, detective, corrective controls.
+- VAT return-to-ledger reconciliation protocol.
+- Documentation retention matrix aligned with bookkeeping retention requirements.
+- Error correction workflow and root-cause remediation process.
+- Fraud risk indicators (including carousel-risk red flags) and response actions.
+
+Deliverable format:
+- Control matrix with owner, frequency, evidence, and failure response.
+
+Acceptance criteria:
+- Period-end VAT package is reproducible and audit-ready.
+
+## 17) Delivery sequence and immediate next actions
+
+### 17.1 Recommended build order
+1. `03-rates-exemptions.md` (classification baseline)
+2. `05-input-vat-deductions.md` (deduction logic depends on classification)
+3. `06-eu-trade.md` and `07-non-eu-trade.md` (cross-border specialization)
+4. `04-filing-payment-calendar.md` (operationalization)
+5. `08-controls-audit-readiness.md` (governance layer)
+6. `01-vat-overview.md` and `02-registration-thresholds.md` finalized last as entry documents referencing all above
+
+### 17.2 Immediate drafting tasks (next sprint)
+- Task A: Build `Momsloven` section 13 exemption matrix draft with legal-reference column.
+- Task B: Draft input VAT deduction policy with partial-deduction methodology and 3 worked examples.
+- Task C: Create EU B2B/B2C decision trees including OSS branch.
+- Task D: Define VAT close control checklist and ownership model.
+
+### 17.3 Definition of done for this documentation phase
+- Every rule statement has either legal reference or official SKAT guidance link.
+- Every VAT treatment decision has a documentation requirement attached.
+- Every recurring obligation has owner, due date, and escalation path.
+- High-risk edge cases are explicitly tagged for specialist review.

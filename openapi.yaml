@@ -8,9 +8,92 @@ servers:
     description: Local dev / sandbox
 
 paths:
+  /auth/oidc/initiate:
+    post:
+      summary: Initiate MitID OIDC authentication (redirect URL)
+      tags:
+        - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                redirectUri:
+                  type: string
+      responses:
+        '200':
+          description: Authentication URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authUrl:
+                    type: string
+
+  /auth/oidc/callback:
+    get:
+      summary: OIDC callback endpoint
+      tags:
+        - auth
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tokens / user session created
+
+  /organisations:
+    get:
+      summary: Lookup organisation by CVR
+      tags:
+        - organisations
+      parameters:
+        - name: cvr
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Organisation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organisation'
+        '404':
+          description: Not found
+
+  /assess/obligation:
+    post:
+      summary: Assess VAT obligation for an organisation
+      tags:
+        - obligation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organisation:
+                  $ref: '#/components/schemas/Organisation'
+                context:
+                  type: object
+      responses:
+        '200':
+          description: Assessment result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentResult'
+
   /applications:
     post:
-      summary: Create a VAT registration application (draft/validate)
+      summary: Create a VAT registration application (draft)
       tags:
         - applications
       security:
@@ -21,19 +104,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/VATApplicationCreate'
-            example:
-              applicantId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-              organisation:
-                cvr: "12345678"
-                name: "ACME A/S"
-              applicationData:
-                registrationType: "standard"
-                startDate: "2026-03-01"
-                schemes:
-                  - "oss"
-                contact:
-                  phone: "+45 12 34 56 78"
-                  email: "info@acme.example"
       responses:
         '201':
           description: Application created
@@ -68,6 +138,196 @@ paths:
                 $ref: '#/components/schemas/VATApplicationResponse'
         '404':
           description: Not found
+    put:
+      summary: Update application draft
+      tags:
+        - applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VATApplicationUpdate'
+      responses:
+        '200':
+          description: Updated
+
+  /applications/{applicationId}/documents:
+    post:
+      summary: Upload a document for an application
+      tags:
+        - documents
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                type:
+                  type: string
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+    get:
+      summary: List documents for application
+      tags:
+        - documents
+      responses:
+        '200':
+          description: Documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+
+  /applications/{applicationId}/validate:
+    post:
+      summary: Validate application against legal ruleset
+      tags:
+        - validation
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+
+  /applications/{applicationId}/assess:
+    post:
+      summary: Run domain assessment for a saved application
+      tags:
+        - assessment
+      responses:
+        '200':
+          description: Assessment result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentResult'
+
+  /applications/{applicationId}/submit:
+    post:
+      summary: Submit application to SKAT (async)
+      tags:
+        - submissions
+      responses:
+        '202':
+          description: Accepted (queued)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResult'
+
+  /submissions/{submissionId}/status:
+    get:
+      summary: Get submission status
+      tags:
+        - submissions
+      parameters:
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Submission status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResult'
+
+  /integrations/skats/callback:
+    post:
+      summary: SKAT callback webhook for submission updates
+      tags:
+        - integrations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Received
+
+  /applications/{applicationId}/corrections:
+    post:
+      summary: Submit a correction for an application
+      tags:
+        - corrections
+      responses:
+        '200':
+          description: Correction accepted
+
+  /applications/{applicationId}/claims:
+    post:
+      summary: Submit a claim for an application
+      tags:
+        - claims
+      responses:
+        '200':
+          description: Claim accepted
+
+  /audit:
+    get:
+      summary: Query audit events
+      tags:
+        - audit
+      parameters:
+        - name: objectType
+          in: query
+          schema:
+            type: string
+        - name: objectId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audit events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditEvent'
+
+  /queue/queued-submissions:
+    get:
+      summary: Admin: list queued submissions
+      tags:
+        - admin
+      responses:
+        '200':
+          description: Queue list
+
+  /submissions/{submissionId}/retry:
+    post:
+      summary: Admin: retry a queued submission
+      tags:
+        - admin
+      parameters:
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Retry scheduled
 
 components:
   securitySchemes:
@@ -87,24 +347,29 @@ components:
           format: uuid
           description: MitID-linked user id
         organisation:
-          type: object
-          properties:
-            cvr:
-              type: string
-              description: Danish CVR number (8 digits)
-            name:
-              type: string
+          $ref: '#/components/schemas/Organisation'
+        applicationData:
+          $ref: '#/components/schemas/ApplicationData'
+      example:
+        applicantId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        organisation:
+          cvr: "12345678"
+          name: "ACME A/S"
+        applicationData:
+          registrationType: "standard"
+          startDate: "2026-03-01"
+          schemes:
+            - "oss"
+          contact:
+            phone: "+45 12 34 56 78"
+            email: "info@acme.example"
+
+    VATApplicationUpdate:
+      type: object
+      properties:
         applicationData:
           type: object
-          description: Structured form payload; validate against JSON Schema server-side
-          example:
-            registrationType: "standard"
-            startDate: "2026-03-01"
-            schemes:
-              - "oss"
-            contact:
-              phone: "+45 12 34 56 78"
-              email: "info@acme.example"
+          $ref: '#/components/schemas/ApplicationData'
 
     VATApplicationResponse:
       type: object
@@ -125,6 +390,142 @@ components:
           type: string
           format: date-time
 
+    Organisation:
+      type: object
+      properties:
+        cvr:
+          type: string
+          description: Danish CVR number (8 digits)
+        name:
+          type: string
+        addresses:
+          type: array
+          items:
+            type: object
+            properties:
+              street:
+                type: string
+              postalCode:
+                type: string
+              city:
+                type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        email:
+          type: string
+        mitidSubject:
+          type: string
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        checksum:
+          type: string
+        uploadedAt:
+          type: string
+          format: date-time
+        url:
+          type: string
+
+    ValidationResult:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+              citationKey:
+                type: string
+        warnings:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+              citationKey:
+                type: string
+      example:
+        valid: false
+        errors:
+          - field: applicationData.startDate
+            message: Start date must be today or later
+            citationKey: VAT_START_DATE_RULE
+        warnings:
+          - message: Consider OSS registration
+            citationKey: VAT_OSS_HINT
+
+    AssessmentResult:
+      type: object
+      properties:
+        obligated:
+          type: boolean
+        reasons:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+              citationKey:
+                type: string
+      example:
+        obligated: true
+        reasons:
+          - message: Annual turnover exceeds threshold
+            citationKey: VAT_TURNOVER_01
+
+    SubmissionResult:
+      type: object
+      properties:
+        status:
+          type: string
+        submissionId:
+          type: string
+        message:
+          type: string
+        skatReference:
+          type: string
+      example:
+        status: queued
+        submissionId: "sub_20260224_0001"
+        message: "Submission queued for delivery to SKAT"
+        skatReference: ""
+
+    AuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        who:
+          type: string
+        what:
+          type: string
+        when:
+          type: string
+          format: date-time
+        payloadHash:
+          type: string
+
     Error:
       type: object
       properties:
@@ -134,3 +535,52 @@ components:
           type: string
         details:
           type: object
+
+    ApplicationData:
+      type: object
+      required:
+        - registrationType
+        - startDate
+      properties:
+        registrationType:
+          type: string
+          description: Type of registration
+          enum:
+            - standard
+            - reverse_charge
+            - non_resident
+        startDate:
+          type: string
+          format: date
+        schemes:
+          type: array
+          items:
+            type: string
+            enum:
+              - oss
+              - reverse_charge
+        contact:
+          type: object
+          properties:
+            phone:
+              type: string
+            email:
+              type: string
+        attachments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+      example:
+        registrationType: "standard"
+        startDate: "2026-03-01"
+        schemes:
+          - "oss"
+        contact:
+          phone: "+45 12 34 56 78"
+          email: "info@acme.example"
+        attachments: []
