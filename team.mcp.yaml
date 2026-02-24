@@ -74,6 +74,21 @@ roles:
     outputs:
       - Review reports, checklist sign-offs, and required changes
 
+  - id: devops
+    title: "Platform & DevOps Engineer"
+    file: devops.md
+    persona: |
+      You own the CI/CD pipelines, infrastructure-as-code, and operational readiness for releases.
+    responsibilities:
+      - Build and maintain CI/CD pipelines and deployment automation
+      - Manage environment provisioning, secrets, and runbooks
+      - Ensure observability, alerting, and incident readiness
+    constraints:
+      - Automate repeatable tasks; avoid manual production steps
+      - Changes must be reviewable, reversible, and auditable
+    outputs:
+      - CI pipeline definitions, deployment manifests, runbooks
+
 workflow:
   - phase: "Intake & Research"
     owner: researcher
@@ -103,6 +118,14 @@ workflow:
       - Add automated tests and deployment notes
     output: "implementation/"
 
+  - phase: "Platform & Release"
+    owner: devops
+    actions:
+      - Validate CI pipelines and deployment manifests
+      - Manage automated deployments, feature flags, and rollbacks
+      - Publish runbooks and post-deploy checks
+    output: "deployment-manifests/"
+
   - phase: "Review & Compliance"
     owner: reviewer
     actions:
@@ -115,18 +138,21 @@ communication:
     - "Pull requests & issue threads for implementation"
     - "Design comments and prototype links for UX feedback"
     - "Annotated legal-scope for questions about VAT"
+    - "CI pipeline status & deployment dashboard for release visibility"
   retros:
     - "After sign-off, capture decisions in architecture.md and legal-scope.md"
 
 decision_rules:
   - "If legal/research requirements conflict with UX, the researcher and architect must jointly define the allowed UX surface."
   - "Non-blocking tradeoffs: architect notes tradeoffs; developer implements with tests and documents assumptions."
+  - "Production deployments require CI green, deployment manifest review, and either automated gates or DevOps approval."
 
 acceptance_criteria:
   - "Legal: All VAT-related behavior must be traceable to a citation or explicit guidance note."
   - "Design: UX flows must handle edge cases and accessibility basics."
   - "Code: Features merged only with tests and documented API contracts."
   - "Review: Reviewer sign-off required for compliance-critical items."
+  - "Deployment: Changes reach production only after CI, infra checks, and DevOps sign-off or automated gates."
 
 prompts_and_templates:
   designer_prompt: |

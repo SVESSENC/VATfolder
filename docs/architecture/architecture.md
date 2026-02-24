@@ -107,8 +107,6 @@ Detailed contract schemas will be defined during the `Define API contracts` TODO
 If you want, I will: (a) create `legal-scope.md` stub for `researcher` to fill, (b) generate an initial DB schema and OpenAPI skeleton. Which should I do next?
 
 **Architecture decision log**
-- ADR-001 (2026-02-24): Use TypeScript end-to-end for frontend/backend contract consistency.
-- ADR-002 (2026-02-24): Start as a modular monolith; defer microservices until scale/ownership boundaries justify it.
-- ADR-003 (2026-02-24): Prefer Azure managed services for operational maturity and EU data residency alignment.
-- ADR-004 (2026-02-24): Use adapter boundaries for MitID, CVR, SKAT/Virk, and notification integrations.
-- ADR-005 (2026-02-24): Choose Node.js + NestJS over Python + FastAPI for this phase; re-evaluate if ML/data-processing exceeds ~30% of backend workload or critical Python-only SDK dependencies emerge.
+- See docs/adr/README.md for ADR index and full records.
+
+
