@@ -4,7 +4,7 @@
 - Compliance-first: every core choice must support Danish/EU data protection, traceability, and auditability.
 - Boring over trendy: pick mature tools with strong long-term support and hiring availability.
 - Replaceable boundaries: use clean APIs and adapters so integrations (MitID, SKAT/Virk) can evolve without rewrites.
-- OSS-first application stack on Azure: keep runtime/tooling portable while using Azure for hosting and managed data services.
+- Cloud-neutral and OSS-first: every component has an open-source self-hosted equivalent; Docker Compose is the canonical dev runtime and the stack deploys on any cloud or bare-metal Kubernetes without code changes.
 
 ## Core Stack We Will Use
 
@@ -37,13 +37,13 @@
   - Meets strong-auth requirements while keeping internals provider-agnostic.
 
 ### Data Layer
-- Primary database: **PostgreSQL 16 (managed, Azure Database for PostgreSQL)**
-- ORM/query layer: **Prisma (with SQL escape hatches for regulated queries)**
-- Caching/queue backend: **Redis (Azure Cache for Redis)**
-- Document/object storage: **Azure Blob Storage** (S3-compatible abstractions optional)
+- Primary database: **PostgreSQL 16** — Docker in dev (`postgres:16-alpine`); any managed PostgreSQL in prod
+- ORM/query layer: **Prisma** (with SQL escape hatches for regulated queries)
+- Caching/queue backend: **Redis 7** — Docker in dev (`redis:7-alpine`); any managed Redis in prod
+- Document/object storage: **MinIO** (self-hosted, S3-compatible API via `@aws-sdk/client-s3`) — swap for any S3-compatible service in prod (Cloudflare R2, Backblaze B2, AWS S3, etc.) with zero application code changes
 - Why:
-  - PostgreSQL is durable, portable, and proven for transactional systems.
-  - Managed services improve reliability and patch posture.
+  - PostgreSQL is durable, portable, and proven for transactional and audit-heavy systems.
+  - Redis and MinIO expose identical APIs locally and in every managed/cloud environment — no conditional code paths per environment.
 
 ### Integrations
 - Integration pattern: **Adapter layer + outbox pattern + retry queues**
@@ -64,7 +64,7 @@
   - Gives legal traceability and operational visibility from day one.
 
 ### Security
-- Secrets: **HashiCorp Vault** (self-hosted on Azure)
+- Secrets: **HashiCorp Vault** (self-hosted; Docker-compatible; provider-agnostic)
 - Encryption at rest: managed disk/db encryption + column-level encryption for sensitive identifiers
 - Encryption in transit: TLS 1.2+
 - Supply chain: **Dependabot/Renovate + SCA + image scanning**
@@ -72,14 +72,15 @@
   - Security controls are built into platform operations, not bolted on.
 
 ### Infrastructure and Delivery
-- Cloud: **Azure (EU region preferred)**
-- Compute: **Azure Container Apps** (upgrade path to AKS if needed)
-- Containerization: **Docker**
+- Local dev: **Docker Compose** — `docker compose up --build` starts the full stack; no local installs required beyond Docker (ADR-011)
+- Production: any OCI-compatible platform — Docker Swarm, K3s, or managed Kubernetes (Hetzner, DigitalOcean, Scaleway, GKE, EKS); EU datacenter required for GDPR/data residency
+- Containerization: **Docker** with multi-stage Dockerfiles — shared `development` (hot-reload) and `production` (optimised, no devDependencies) build stages
 - CI/CD: **GitHub Actions** with protected branches and required checks
 - IaC: **Terraform**
 - Why:
-  - Fast operational start with a clean path to higher scale.
-  - Reproducible infrastructure and auditable environment changes.
+  - Zero local-install requirement eliminates onboarding friction and environment drift.
+  - Identical container images flow from dev → CI → prod; no per-environment runtime surprises.
+  - Cloud-neutral stack keeps vendor lock-in risk low; choose or switch provider based on cost and data-residency rules.
 
 ### Testing and Quality Gates
 - Unit tests: **Vitest / Jest**
@@ -111,8 +112,9 @@
 ## Architecture Decision Log Seed
 - ADR-001: TypeScript end-to-end for faster delivery and contract consistency.
 - ADR-002: Modular monolith before microservices.
-- ADR-003: Azure hosting with OSS application tooling.
+- ADR-003: Azure hosting with OSS application tooling. (**Superseded by ADR-011**)
 - ADR-004: Adapter architecture for all external government/identity integrations.
+- ADR-011: Full containerization with open-source infrastructure — Docker Compose for dev, cloud-neutral OCI runtime for prod.
 
 ## Why Not Python/FastAPI (For This Project)
 - We chose TypeScript end-to-end to keep frontend/backend contracts in one language and reduce integration drift.

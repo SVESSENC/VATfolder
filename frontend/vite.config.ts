@@ -9,9 +9,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // host: true allows connections from outside the container when running in Docker
+    host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        // VITE_API_TARGET is set in docker-compose; falls back to localhost for bare-metal dev
+        target: process.env['VITE_API_TARGET'] ?? 'http://localhost:3000',
         changeOrigin: true,
       },
     },

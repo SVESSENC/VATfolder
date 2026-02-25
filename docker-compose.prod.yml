@@ -1,0 +1,38 @@
+# Production overrides — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+
+name: vat-platform
+
+services:
+
+  backend:
+    build:
+      context: ./backend
+      target: production
+    restart: always
+    environment:
+      NODE_ENV: production
+    volumes: []   # no bind mounts in production
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+    restart: always
+    ports:
+      - "80:80"
+    volumes: []
+    # Override dev port mapping — prod frontend is on 80 via nginx
+    # Remove the 5173 mapping by not inheriting it here
+
+  minio:
+    ports:
+      - "9000:9000"   # Keep S3 API
+      # Remove console port in production
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"

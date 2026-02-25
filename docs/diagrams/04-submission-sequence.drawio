@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-02-25" version="21.0.0">
+  <diagram name="Submission Sequence" id="04-submission-sequence">
+    <mxGraphModel dx="1200" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ── Title ── -->
+        <mxCell id="title" value="VAT Platform — Submit Application Flow  (POST /api/v1/applications/{id}/submit)"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=16;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="100" y="10" width="1000" height="32" as="geometry"/>
+        </mxCell>
+
+        <!-- ── Column headers ── -->
+        <mxCell id="hSync" value="SYNCHRONOUS  (HTTP request / response)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1e1e1;strokeColor=#666666;fontSize=12;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="52" width="360" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="hAsync" value="ASYNCHRONOUS  (BullMQ worker — runs after 202 returned)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="760" y="52" width="360" height="36" as="geometry"/>
+        </mxCell>
+
+        <!-- ── Vertical divider ── -->
+        <mxCell id="divider" value=""
+          style="endArrow=none;html=1;strokeColor=#cccccc;strokeDasharray=6,4;strokeWidth=1;"
+          edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600" y="50" as="sourcePoint"/>
+            <mxPoint x="600" y="1060" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ══════════════ LEFT COLUMN (sync) ══════════════ -->
+
+        <!-- Step 1: User triggers -->
+        <mxCell id="L1" value="[&lt;b&gt;User&lt;/b&gt;] Clicks Submit Application&lt;br/&gt;button on the review step of the wizard"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="105" width="360" height="58" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 2: Frontend HTTP call -->
+        <mxCell id="L2" value="[&lt;b&gt;Frontend&lt;/b&gt;] POST /api/v1/applications/{id}/submit&lt;br/&gt;Authorization: Bearer &lt;jwt&gt;&lt;br/&gt;X-Idempotency-Key: &lt;client-uuid&gt;  ← required (ADR-009)&lt;br/&gt;X-Correlation-ID: &lt;uuid&gt;  ← recommended"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="183" width="360" height="88" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 3: JWT Guard -->
+        <mxCell id="L3" value="[&lt;b&gt;Backend — JwtAuthGuard&lt;/b&gt;]&lt;br/&gt;Validate Bearer token → reject 401 if invalid"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="291" width="360" height="58" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 4: Idempotency Guard -->
+        <mxCell id="L4" value="[&lt;b&gt;Backend — IdempotencyGuard&lt;/b&gt;]&lt;br/&gt;Look up X-Idempotency-Key in IdempotencyKey table&lt;br/&gt;If key exists → return cached 202 immediately"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="369" width="360" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 5: Create Submission record -->
+        <mxCell id="L5" value="[&lt;b&gt;Backend — SubmissionsService&lt;/b&gt;]&lt;br/&gt;Persist Submission record → status: QUEUED&lt;br/&gt;Store idempotency key · Append AuditEvent"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="461" width="360" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 6: Enqueue job -->
+        <mxCell id="L6" value="[&lt;b&gt;Backend → Redis&lt;/b&gt;]&lt;br/&gt;Enqueue submission job to BullMQ&lt;br/&gt;Payload: { submissionId, applicationId, correlationId }"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="553" width="360" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 7: Return 202 -->
+        <mxCell id="L7" value="[&lt;b&gt;Backend → Frontend&lt;/b&gt;]&lt;br/&gt;Return 202 Accepted&lt;br/&gt;{ submissionId: &quot;&lt;uuid&gt;&quot;, status: &quot;QUEUED&quot; }"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="645" width="360" height="65" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 8: Frontend shows status -->
+        <mxCell id="L8" value="[&lt;b&gt;Frontend → User&lt;/b&gt;]&lt;br/&gt;Display &quot;Application submitted — processing&quot;&lt;br/&gt;Begin polling GET /submissions/{submissionId}/status"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="730" width="360" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 9: User sees final status -->
+        <mxCell id="L9" value="[&lt;b&gt;User&lt;/b&gt;] Poll resolves when status changes&lt;br/&gt;→ ACCEPTED (with SKAT reference)&lt;br/&gt;→ FAILED (with retry option)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=8;strokeDasharray=5,3;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="950" width="360" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- ══════════════ RIGHT COLUMN (async) ══════════════ -->
+
+        <!-- Step A: Worker dequeues -->
+        <mxCell id="RA" value="[&lt;b&gt;BullMQ Worker&lt;/b&gt;]&lt;br/&gt;Job dequeued from Redis queue&lt;br/&gt;Lock acquired · correlationId attached to logger"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="760" y="461" width="360" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- Step B: Load + build payload -->
+        <mxCell id="RB" value="[&lt;b&gt;BullMQ Worker&lt;/b&gt;]&lt;br/&gt;Load Application + Documents from PostgreSQL&lt;br/&gt;Transform to SKAT submission format · sign payload"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="760" y="553" width="360" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- Step C: SKAT adapter call -->
+        <mxCell id="RC" value="[&lt;b&gt;SKAT Adapter&lt;/b&gt;]&lt;br/&gt;POST to SKAT/Virk endpoint (MTLS)&lt;br/&gt;X-SKAT-Timestamp · signed body&lt;br/&gt;Timeout + retry with exponential backoff"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="760" y="645" width="360" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Step D: Decision diamond -->
+        <mxCell id="RD" value="SKAT response OK?"
+          style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;"
+          vertex="1" parent="1">
+          <mxGeometry x="855" y="755" width="170" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Step E1: Success -->
+        <mxCell id="RE1" value="[&lt;b&gt;Worker — success&lt;/b&gt;]&lt;br/&gt;Update Submission → ACCEPTED&lt;br/&gt;Store SKAT reference number&lt;br/&gt;Append AuditEvent (immutable)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="660" y="865" width="210" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Step E2: Failure -->
+        <mxCell id="RE2" value="[&lt;b&gt;Worker — failure&lt;/b&gt;]&lt;br/&gt;Update Submission → FAILED&lt;br/&gt;Push to DLQ · schedule retry&lt;br/&gt;Append failure AuditEvent"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;arcSize=8;"
+          vertex="1" parent="1">
+          <mxGeometry x="910" y="865" width="210" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Step F: Notify (optional) -->
+        <mxCell id="RF" value="[&lt;b&gt;Worker — optional&lt;/b&gt;]&lt;br/&gt;Trigger e-Boks / email notification&lt;br/&gt;via Notification Adapter"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;arcSize=8;strokeDasharray=5,3;"
+          vertex="1" parent="1">
+          <mxGeometry x="760" y="990" width="360" height="65" as="geometry"/>
+        </mxCell>
+
+        <!-- ══════════════ EDGES ══════════════ -->
+
+        <!-- Left column vertical flow -->
+        <mxCell id="eL12" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="L1" target="L2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="eL23" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="L2" target="L3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="eL34" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="L3" target="L4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="eL45" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="L4" target="L5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="eL56" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="L5" target="L6" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="eL67" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="L6" target="L7" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="eL78" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="L7" target="L8" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Async cross-column: enqueue → worker dequeues -->
+        <mxCell id="eCross" value="async job dispatched"
+          style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d79b00;fontColor=#d79b00;fontSize=11;fontStyle=1;dashed=1;exitX=1;exitY=0.5;exitFixed=1;entryX=0;entryY=0.5;entryFixed=1;"
+          edge="1" source="L6" target="RA" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Right column vertical flow -->
+        <mxCell id="eRAB" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="RA" target="RB" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="eRBC" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="RB" target="RC" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="eRCD" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" source="RC" target="RD" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Diamond → success (left) -->
+        <mxCell id="eDYes" value="Yes"
+          style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#82b366;fontColor=#5a7c50;fontSize=11;fontStyle=1;exitX=0;exitY=0.5;exitFixed=1;"
+          edge="1" source="RD" target="RE1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Diamond → failure (right) -->
+        <mxCell id="eDNo" value="No"
+          style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;fontColor=#b85450;fontSize=11;fontStyle=1;exitX=1;exitY=0.5;exitFixed=1;"
+          edge="1" source="RD" target="RE2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Success/Failure → notify -->
+        <mxCell id="eE1F" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;dashed=1;" edge="1" source="RE1" target="RF" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="eE2F" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;dashed=1;" edge="1" source="RE2" target="RF" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Polling resolves: status update → user sees it -->
+        <mxCell id="ePoll" value="status update visible via GET polling"
+          style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6c8ebf;fontColor=#6c8ebf;fontSize=11;dashed=1;exitX=0;exitY=0.5;exitFixed=1;"
+          edge="1" source="RE1" target="L9" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

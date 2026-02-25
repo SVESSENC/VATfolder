@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-02-25" version="21.0.0">
+  <diagram name="Application Modules" id="03-application-modules">
+    <mxGraphModel dx="1200" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="820" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ── Title ── -->
+        <mxCell id="title" value="VAT Platform — Backend Application Module Map (NestJS)"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=17;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="150" y="10" width="900" height="32" as="geometry"/>
+        </mxCell>
+
+        <!-- ── NestJS application boundary ── -->
+        <mxCell id="appBound" value="backend container · NestJS 11 · Node.js 22 LTS"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#82b366;strokeDasharray=6,3;strokeWidth=2;fontSize=12;fontStyle=1;verticalAlign=top;arcSize=2;"
+          vertex="1" parent="1">
+          <mxGeometry x="30" y="55" width="1140" height="745" as="geometry"/>
+        </mxCell>
+
+        <!-- ── API Layer strip ── -->
+        <mxCell id="apiLayer" value="API Layer — CorrelationIdMiddleware · JwtAuthGuard (default on) · GlobalExceptionFilter · Swagger /api/docs (dev) · /api/v1/* prefix (ADR-007) · X-Idempotency-Key enforced on mutating ops (ADR-009)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f4fd;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;arcSize=4;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="95" width="1080" height="65" as="geometry"/>
+        </mxCell>
+
+        <!-- ── Module row 1 (x: 60, 330, 600, 870) width=255 ── -->
+
+        <!-- Auth Module -->
+        <mxCell id="modAuth" value="&lt;b&gt;Auth Module&lt;/b&gt;&lt;br/&gt;JwtStrategy · JwtAuthGuard&lt;br/&gt;POST /auth/dev-login&lt;br/&gt;GET /auth/me&lt;br/&gt;&lt;i&gt;stub: MitID OIDC callback&lt;/i&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="200" width="255" height="125" as="geometry"/>
+        </mxCell>
+
+        <!-- Applications Module -->
+        <mxCell id="modApps" value="&lt;b&gt;Applications Module&lt;/b&gt;&lt;br/&gt;POST /applications (create)&lt;br/&gt;GET /applications · GET /:id&lt;br/&gt;PUT /:id (update)&lt;br/&gt;POST /:id/assess (obligation)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="330" y="200" width="255" height="125" as="geometry"/>
+        </mxCell>
+
+        <!-- Submissions Module -->
+        <mxCell id="modSubs" value="&lt;b&gt;Submissions Module&lt;/b&gt;&lt;br/&gt;POST /:id/submit (idempotent)&lt;br/&gt;GET /submissions/:id/status&lt;br/&gt;POST /submissions/:id/retry&lt;br/&gt;outbox → BullMQ job"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="600" y="200" width="255" height="125" as="geometry"/>
+        </mxCell>
+
+        <!-- Documents Module -->
+        <mxCell id="modDocs" value="&lt;b&gt;Documents Module&lt;/b&gt;&lt;br/&gt;POST /:id/documents&lt;br/&gt;   → presigned URL (S3)&lt;br/&gt;GET /:id/documents&lt;br/&gt;GET /:id/documents/:docId"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="200" width="255" height="125" as="geometry"/>
+        </mxCell>
+
+        <!-- ── Module row 2 ── -->
+
+        <!-- Organisations Module -->
+        <mxCell id="modOrgs" value="&lt;b&gt;Organisations Module&lt;/b&gt;&lt;br/&gt;GET /organisations?cvr={cvr}&lt;br/&gt;CVR API adapter call&lt;br/&gt;pre-fill company data"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="365" width="255" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- Validation Module -->
+        <mxCell id="modVal" value="&lt;b&gt;Validation Module&lt;/b&gt;&lt;br/&gt;POST /applications/:id/validate&lt;br/&gt;GET /validation/rulesets&lt;br/&gt;RulesEngine — versioned YAML/JSON&lt;br/&gt;ruleset 2026-01 (static)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="330" y="365" width="255" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- Audit Module -->
+        <mxCell id="modAudit" value="&lt;b&gt;Audit Module&lt;/b&gt;&lt;br/&gt;GET /audit?objectType&amp;objectId&lt;br/&gt;AuditEvent append (interceptor)&lt;br/&gt;Immutable append-only records&lt;br/&gt;hash + checksum fields"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="600" y="365" width="255" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- Filings Module (proposed) -->
+        <mxCell id="modFilings" value="&lt;b&gt;Filings Module&lt;/b&gt; (proposed)&lt;br/&gt;POST /filings → 202 Accepted&lt;br/&gt;GET /filings/:id · POST /claims&lt;br/&gt;Publishes FilingSubmitted event&lt;br/&gt;&lt;i&gt;Requires ADR-006 acceptance&lt;/i&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;arcSize=6;strokeDasharray=5,3;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="365" width="255" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- ── Data / Infrastructure row ── -->
+        <mxCell id="infraTitle" value="Data &amp; Infrastructure"
+          style="text;html=1;strokeColor=none;fillColor=none;fontSize=12;fontStyle=1;align=left;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="512" width="200" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prisma" value="&lt;b&gt;Prisma ORM → PostgreSQL 16&lt;/b&gt;&lt;br/&gt;All domain models + AuditEvent&lt;br/&gt;Migration: prisma migrate deploy on start&lt;br/&gt;Schema: backend/prisma/schema.prisma"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="535" width="345" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="bullmq" value="&lt;b&gt;Redis 7 / BullMQ&lt;/b&gt;&lt;br/&gt;Submission job queue&lt;br/&gt;Outbox pattern (IdempotencyKey table)&lt;br/&gt;ioredis client"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="420" y="535" width="280" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="minio" value="&lt;b&gt;MinIO / S3-compatible Storage&lt;/b&gt;&lt;br/&gt;@aws-sdk/client-s3&lt;br/&gt;Presigned URLs for uploads&lt;br/&gt;Bucket: vat-documents"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="715" y="535" width="280" height="95" as="geometry"/>
+        </mxCell>
+
+        <!-- ── External adapters row ── -->
+        <mxCell id="adapTitle" value="External Adapters (adapter pattern — ADR-004)"
+          style="text;html=1;strokeColor=none;fillColor=none;fontSize=12;fontStyle=1;align=left;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="665" width="400" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="adpMitid" value="&lt;b&gt;MitID Adapter&lt;/b&gt;&lt;br/&gt;OIDC / SAML token exchange&lt;br/&gt;Dev stub: dev-login endpoint&lt;br/&gt;&lt;i&gt;Production: pending integration&lt;/i&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="688" width="255" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="adpCvr" value="&lt;b&gt;CVR Adapter&lt;/b&gt;&lt;br/&gt;REST · HTTPS&lt;br/&gt;Danish Business Authority&lt;br/&gt;company register lookup"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="330" y="688" width="255" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="adpSkat" value="&lt;b&gt;SKAT Adapter&lt;/b&gt;&lt;br/&gt;MTLS · signed payload&lt;br/&gt;X-SKAT-Signature webhook validation&lt;br/&gt;Exponential backoff + DLQ"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="600" y="688" width="255" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="adpEboks" value="&lt;b&gt;e-Boks / Email Adapter&lt;/b&gt;&lt;br/&gt;REST (digital post) / SMTP&lt;br/&gt;Registration confirmations&lt;br/&gt;Follow-up reminders"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;arcSize=6;"
+          vertex="1" parent="1">
+          <mxGeometry x="870" y="688" width="255" height="95" as="geometry"/>
+        </mxCell>
+
+        <!-- ── Edges: API Layer → modules ── -->
+        <mxCell id="e_api_auth" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6c8ebf;exitX=0.1;exitY=1;exitFixed=1;" edge="1" source="apiLayer" target="modAuth" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_api_apps" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6c8ebf;exitX=0.35;exitY=1;exitFixed=1;" edge="1" source="apiLayer" target="modApps" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_api_subs" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6c8ebf;exitX=0.6;exitY=1;exitFixed=1;" edge="1" source="apiLayer" target="modSubs" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_api_docs" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6c8ebf;exitX=0.85;exitY=1;exitFixed=1;" edge="1" source="apiLayer" target="modDocs" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ── Edges: modules → data infra ── -->
+        <mxCell id="e_apps_pg" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;" edge="1" source="modApps" target="prisma" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_subs_bq" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;" edge="1" source="modSubs" target="bullmq" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_docs_mn" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;" edge="1" source="modDocs" target="minio" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_audit_pg" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;" edge="1" source="modAudit" target="prisma" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ── Edges: modules → adapters ── -->
+        <mxCell id="e_auth_mitid" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#666666;" edge="1" source="modAuth" target="adpMitid" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_orgs_cvr" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#666666;" edge="1" source="modOrgs" target="adpCvr" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_subs_skat" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#666666;" edge="1" source="modSubs" target="adpSkat" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

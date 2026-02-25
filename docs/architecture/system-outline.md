@@ -11,6 +11,19 @@ Scope
 High-level overview
 - Users authenticate with MitID, may prefill data from CVR, complete a short questionnaire to assess VAT obligation, fill and upload required documents, validate using the legal ruleset, then submit to SKAT (or produce signed payload/PDF for manual submission). The system tracks lifecycle and produces post-registration tasks.
 
+Container runtime (ADR-011)
+- The entire platform runs in Docker; no local tool installs required beyond Docker.
+- `docker compose up --build` starts all services for development.
+- `docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build` starts production-optimised builds.
+
+| Service    | Image                  | Dev port(s)   | Role                            |
+|------------|------------------------|---------------|---------------------------------|
+| postgres   | postgres:16-alpine     | 5432          | Primary database                |
+| redis      | redis:7-alpine         | 6379          | BullMQ queue + cache            |
+| minio      | minio/minio            | 9000 / 9001   | S3-compatible blob storage      |
+| backend    | custom NestJS 11       | 3000          | REST API + business logic       |
+| frontend   | custom Vite / nginx    | 5173 (dev) / 80 (prod) | React SPA           |
+
 User workflows (seven steps)
 1. Assessment: call the obligation engine; receive decision and citations.
 2. Identity and Organisation: MitID OIDC, CVR lookup, link accounts.
@@ -48,11 +61,16 @@ Diagrams
 References (workspace files)
 - `docs/architecture/architecture.md`
 - `docs/architecture/tech-stack.md`
+- `docs/adr/ADR-011-containerization.md`
+- `docker-compose.yml` — development stack
+- `docker-compose.prod.yml` — production overrides
+- `backend/Dockerfile`
+- `frontend/Dockerfile`
 - `api/openapi.yaml`
 - `database/db_schema.sql`
 - `team.mcp.yaml`
 
 Document history
 - Created: 2026-02-24
-- Updated: 2026-02-24
+- Updated: 2026-02-25 — added container runtime section and Docker Compose references (ADR-011)
 - Author: architect

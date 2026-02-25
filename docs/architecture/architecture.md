@@ -2,6 +2,24 @@
 
 This document describes a practical, buildable system for supporting the main steps of Danish VAT (moms) registration and immediate post-registration obligations. It focuses on a minimal-complexity design that meets legal traceability, supports MitID authentication, and is extensible for SKAT/Virk integrations.
 
+**Quick start (containerized)**
+
+The entire stack runs in Docker. No local installs are required beyond Docker Desktop (or Docker Engine + Compose plugin).
+
+```
+# Development (hot-reload, local ports exposed)
+docker compose up --build
+
+# Production-optimised build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+```
+
+| URL | Service |
+|-----|---------|
+| http://localhost:5173 | Frontend (React/Vite dev server) |
+| http://localhost:3000 | Backend API + Swagger (`/api/docs`) |
+| http://localhost:9001 | MinIO web console (dev only) |
+
 **Assumptions**
 - Legal and API specifics (SKAT/Virk endpoints, required payloads) will be validated by `researcher` before implementation.
 - Users will authenticate with MitID (business/corporate flows where applicable). Confirm MitID product and scope with `researcher` and integrations.
@@ -20,16 +38,23 @@ This document describes a practical, buildable system for supporting the main st
 7. Post-registration: generate compliance checklist, first-period filing reminders, and bookkeeping hints.
 
 **System components**
-- Web frontend (SPA) - Vite + React + TypeScript: forms, flows, status dashboard.
-- Backend API - NestJS on Node.js 22 LTS: business logic, validation, integration adapters.
-- Auth layer - MitID connector (OIDC/SSO) plus RBAC for internal users.
-- Data store - PostgreSQL for core domain data and audit trails.
-- Document store - S3-compatible blob store for uploaded docs (encrypted).
-- Queue and async processing (canonical MVP) - Redis/BullMQ worker flow with outbox pattern.
-- Event bus and dedicated orchestrator (proposed target state) - deferred until ADR-006 is accepted.
-- Integration adapters - modular connectors for MitID auth, CVR lookup, SKAT/Virk submission, e-mail/e-Boks notifications.
-- Audit and logging - append-only audit store (immutable events) and structured logs (OpenTelemetry plus Loki).
-- Monitoring and alerting - basic health, failed submissions, and SLA alerts.
+
+_Infrastructure (Docker containers — see `docker-compose.yml`)_
+- PostgreSQL 16 — core domain data and immutable audit trail.
+- Redis 7 — BullMQ queue backend and cache.
+- MinIO — S3-compatible blob storage for uploaded documents (swap for any S3-compatible service in production with zero code changes).
+
+_Application (Docker containers — custom images with multi-stage builds)_
+- Frontend (SPA) — Vite + React + TypeScript: registration forms, status dashboard, wizard flow.
+- Backend API — NestJS on Node.js 22 LTS: business logic, validation, integration adapters; Swagger at `/api/docs`.
+- Auth layer — MitID OIDC connector plus JWT/RBAC for internal users.
+- Queue and async processing (canonical MVP) — BullMQ worker flow with outbox pattern (Redis-backed).
+- Event bus and dedicated orchestrator (proposed target state) — deferred until ADR-006 is accepted.
+
+_Cross-cutting_
+- Integration adapters — modular connectors for MitID auth, CVR lookup, SKAT/Virk submission, e-mail/e-Boks notifications.
+- Audit and logging — append-only AuditEvent records and structured logs (OpenTelemetry + Loki).
+- Monitoring and alerting — health endpoints, submit-queue depth, and SLA alerts.
 
 **Key data model (entities)**
 - User (person) - identities linked to MitID and email.
@@ -75,11 +100,26 @@ Full contract schemas are defined in `docs/architecture/filing-api-contract.md` 
 - End-to-end tests for main registration flows using test users or MitID test environments.
 - Compliance regression: verify traceability of legal citations to reactions in the ruleset.
 
+**Container topology (ADR-011)**
+
+All services run in Docker; no local tool installation is required beyond Docker.
+Run `docker compose up --build` to start the complete development stack.
+
+| Service    | Image                | Dev port(s)       | Purpose                        |
+|------------|----------------------|-------------------|--------------------------------|
+| postgres   | postgres:16-alpine   | 5432              | Primary database               |
+| redis      | redis:7-alpine       | 6379              | BullMQ queue + cache           |
+| minio      | minio/minio          | 9000 / 9001       | S3-compatible blob storage     |
+| backend    | custom NestJS 11     | 3000              | REST API + business logic      |
+| frontend   | custom Vite / nginx  | 5173 (dev) / 80   | React SPA                      |
+
+See `docker-compose.yml` (development) and `docker-compose.prod.yml` (production overrides).
+
 **Deployment and infra recommendations**
-- Host on Azure (recommended for Danish customers) or another cloud with EU datacenter residency.
-- Containerize services with Docker and orchestrate with Kubernetes, Azure Container Apps, or Azure App Service with container support.
-- Use managed Postgres (Azure Database for PostgreSQL) and Azure Blob Storage or S3-compatible storage with server-side encryption.
-- CI/CD: pipeline for lint/test/build/deploy. Require PR review and automated contract tests before permitting merge to main.
+- **Dev:** `docker compose up --build` — zero local prerequisites beyond Docker (ADR-011).
+- **Production:** deploy container images on any OCI-compatible platform. Recommended open-source-friendly options: Hetzner + managed k8s, Scaleway, DigitalOcean Managed Kubernetes, K3s on bare-metal, or any cloud with managed PostgreSQL + Redis (EU region required for GDPR/data residency).
+- **Blob storage:** MinIO locally → swap for any S3-compatible service in production (Cloudflare R2, Backblaze B2, Wasabi, AWS S3, self-hosted MinIO cluster) — the application uses the standard S3 SDK and requires no code changes.
+- **CI/CD:** GitHub Actions pipeline — lint / test / build / push images / deploy. PR review and automated contract tests required before merge to main.
 
 **Observability and runbooks**
 - Health endpoints per service; dashboard for submit-queue depth and failed submissions.
@@ -113,5 +153,6 @@ Full contract schemas are defined in `docs/architecture/filing-api-contract.md` 
 
 **Architecture decision log**
 - See docs/adr/README.md for ADR index and full records.
-- Accepted baseline: ADR-002-modular-monolith-first.md, ADR-007-api-versioning.md, ADR-008-auth-by-default.md, ADR-009-idempotency.md, ADR-010-canonical-stack.md.
+- Accepted baseline: ADR-002-modular-monolith-first.md, ADR-007-api-versioning.md, ADR-008-auth-by-default.md, ADR-009-idempotency.md, ADR-010-canonical-stack.md, ADR-011-containerization.md.
+- ADR-003 (Azure Hosting) superseded by ADR-011.
 - Proposed extension: ADR-006-orchestrator-eventbus.md.

@@ -1,7 +1,7 @@
 # ADR-003: Azure Hosting with OSS Application Tooling
 
 - Date: 2026-02-24
-- Status: Accepted
+- Status: Superseded by ADR-011
 
 ## Context
 Platform needs operational reliability, secure defaults, and EU data residency alignment.
