@@ -1,27 +1,47 @@
-# Container Architecture Diagram
+# 02 Drill-Down: Runtime Container Topology (Docker MVP)
 
 ```mermaid
 flowchart TB
-  FE[Frontend\nVite + React] --> GATE[API Layer\nControllers + DTO Validation]
-  GATE --> AUTH[Auth Module\nMitID + RBAC]
-  GATE --> APP[Application Module\nDraft/Validate/Submit]
-  GATE --> DOC[Document Module]
-  GATE --> AUD[Audit Module]
-  GATE --> INT[Integration Module\nAdapter Interfaces]
+  subgraph EDGE[Edge]
+    BROWSER[Browser]
+  end
 
-  APP --> RULES[Rules Engine\nVersioned YAML/JSON]
-  APP --> OUTBOX[Outbox Table]
+  subgraph APP[Application Containers]
+    FE[frontend\nVite + nginx]
+    API[backend\nNestJS API]
+    WK[worker\nBullMQ processor]
+  end
 
-  INT --> MITID_A[MitID Adapter]
-  INT --> CVR_A[CVR Adapter]
-  INT --> SKAT_A[SKAT Adapter]
-  INT --> MSG_A[Notification Adapter]
+  subgraph DATA[Data Containers]
+    PG[(postgres:16-alpine)]
+    REDIS[(redis:7-alpine)]
+    MINIO[(minio/minio)]
+  end
 
-  APP --> PG[(PostgreSQL)]
-  DOC --> BLOB[(Blob Storage)]
-  APP --> REDIS[(Redis BullMQ)]
-  AUD --> PG
-  OUTBOX --> WORKER[Worker Process\nRetry + Idempotency]
-  WORKER --> SKAT_A
-  WORKER --> MSG_A
+  subgraph OBS[Observability Stack]
+    OTEL[OpenTelemetry Collector]
+    PROM[Prometheus]
+    GRAF[Grafana]
+    LOKI[Loki]
+    TEMPO[Tempo]
+  end
+
+  BROWSER --> FE
+  FE --> API
+  API --> PG
+  API --> REDIS
+  API --> MINIO
+  WK --> REDIS
+  WK --> PG
+  WK --> MINIO
+
+  API -. traces/logs/metrics .-> OTEL
+  WK -. traces/logs/metrics .-> OTEL
+  FE -. frontend telemetry .-> OTEL
+  OTEL --> PROM
+  OTEL --> LOKI
+  OTEL --> TEMPO
+  GRAF --> PROM
+  GRAF --> LOKI
+  GRAF --> TEMPO
 ```

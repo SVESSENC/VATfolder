@@ -47,6 +47,7 @@
 
 ### Integrations
 - Integration pattern: **Adapter layer + outbox pattern + retry queues**
+- MVP policy: all external integrations run as internal stubs/adapters; live provider connectivity is post-MVP.
 - Targets:
   - MitID
   - CVR data source
@@ -112,7 +113,7 @@
 ## Architecture Decision Log Seed
 - ADR-001: TypeScript end-to-end for faster delivery and contract consistency.
 - ADR-002: Modular monolith before microservices.
-- ADR-003: Azure hosting with OSS application tooling. (**Superseded by ADR-011**)
+- ADR-003: Vendor-managed hosting baseline (deprecated; superseded by ADR-011).
 - ADR-004: Adapter architecture for all external government/identity integrations.
 - ADR-011: Full containerization with open-source infrastructure — Docker Compose for dev, cloud-neutral OCI runtime for prod.
 

@@ -41,7 +41,7 @@ let DocumentsService = class DocumentsService {
                 checksum: dto.checksum ?? null,
             },
         });
-        // In production this would return a presigned URL from Azure Blob / S3.
+        // In production this would return a presigned URL from an S3-compatible object store.
         // For now we return the document record and a placeholder uploadUrl.
         const storageBaseUrl = this.config.get('BLOB_STORAGE_URL', 'https://storage.example.com');
         return {

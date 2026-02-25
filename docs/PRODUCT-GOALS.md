@@ -12,12 +12,13 @@
 This document defines the goals, scope, and success criteria for the **VAT Core** — a Danish VAT administration platform.
 
 The platform is built on the Danish regulatory framework: `Momsloven`, `Bogføringsloven`, SKAT guidance, and the EU VAT Directive.
+The product direction is to match the reference-case level of rigor and completeness for VAT administration, but strictly for Danish VAT and without Lumenus-specific dependencies.
 
 ---
 
 ## 2. Vision
 
-> A complete, production-grade Danish VAT compliance platform — where a business can register, file, pay, and stay compliant through a single self-service workflow, with every rule traceable to Danish law.
+> A pre-production MVP Danish VAT compliance platform — where a business can complete the full VAT workflow in a single self-service journey using internal services only, with every rule traceable to Danish law.
 
 ---
 
@@ -44,7 +45,7 @@ All paths — including direct exits from Filing, Validation, Tax Rule & Assessm
 | Module                  | Description                                                             |
 |-------------------------|-------------------------------------------------------------------------|
 | Taxpayer registration   | DKK 50,000 rolling 12-month threshold check; voluntary registration path |
-| CVR/SE lookup           | Business identity and classification via `virk.dk`                      |
+| CVR/SE lookup           | Business identity and classification via internal CVR adapter stub (target: `virk.dk`) |
 | Self-service access     | Portal account creation and role assignment                             |
 
 **Law:** `Momsloven` §47; SKAT registration guidance.
@@ -79,7 +80,7 @@ All paths — including direct exits from Filing, Validation, Tax Rule & Assessm
 | Filing notice       | Notifies taxpayer when a filing window opens                                   |
 | Return entry        | Taxpayer enters all 10 VAT return fields (see §3.4 Validation for field list)  |
 | Zero-return         | Handles required nil submissions for periods with no taxable activity          |
-| Submission          | Transmits return to SKAT; stores acknowledgement and submission payload        |
+| Submission          | Stores submission payload and acknowledgement envelope in internal submission ledger (no external dispatch in MVP) |
 | Final return        | Handles the last VAT return on business closure                                |
 | Filing type         | Classifies every filing as `regular`, `zero`, or `amendment`                  |
 
@@ -141,7 +142,7 @@ Amendment routes to **Claim** (if the correction results in a refund entitlement
 
 **What it does:** Processes refund entitlements — whether from a negative net VAT position, an amendment, or an overpayment.
 
-For every filing period, the system produces exactly one outcome: `payable` (taxpayer owes VAT), `refund` (taxpayer is owed VAT), or `zero` (no net amount). This outcome is packaged as a canonical claim payload dispatched to the external collection/settlement system.
+For every filing period, the system produces exactly one outcome: `payable` (taxpayer owes VAT), `refund` (taxpayer is owed VAT), or `zero` (no net amount). This outcome is packaged as a canonical claim payload recorded in the internal settlement ledger for MVP.
 
 **Canonical claim payload:**
 - `claim_id`, `taxpayer_id`, `period_start`, `period_end`
@@ -154,9 +155,9 @@ For every filing period, the system produces exactly one outcome: `payable` (tax
 |-------------------------|-------------------------------------------------------------------------------------|
 | Outcome determination   | Maps net VAT amount to `payable`, `refund`, or `zero`                               |
 | Claim payload creation  | Assembles canonical claim with all traceability IDs                                 |
-| Claim dispatch          | Sends claim to external collection/settlement system (e.g. Skattekontoen)           |
-| Payout                  | Refund disbursed via NemKonto                                                        |
-| Overpayment handling    | Credit applied to next period or paid out on request                                |
+| Claim dispatch          | Records claim in internal settlement queue (external dispatch deferred post-MVP)      |
+| Payout                  | Simulated payout state transitions in internal ledger                                 |
+| Overpayment handling    | Credit carried forward in internal account model                                      |
 | Open claims tracking    | Tracks outstanding claims to resolution                                             |
 
 Claim routes to **Audit** for audit trail recording.
@@ -186,7 +187,7 @@ These capabilities are not primary flow nodes but are required for a complete pl
 
 | Capability  | Description                                                                                       |
 |-------------|---------------------------------------------------------------------------------------------------|
-| Payment     | Due date tracking, payment registration via Skattekontoen, grace dates                           |
+| Payment     | Due date tracking, internal payment registration model, grace dates                               |
 | Dunning     | Late filing notices, provisional assessments (DKK 1,400/period), interest, payment plans, hard debt escalation |
 | Reporting   | Compliance dashboard — obligations, filing status, open claims, payment position                  |
 
@@ -212,14 +213,16 @@ These capabilities are not primary flow nodes but are required for a complete pl
 ### In scope
 
 - All 8 core capabilities: Registration, Obligation, Filing, Validation, Tax Rule & Assessment, Amendment, Claim, Audit
+- Danish VAT only (no non-Danish tax domains)
+- No Lumenus-specific platform dependencies, naming, or integration contracts
 - Supporting capabilities: Payment, Dunning, Reporting
 - All four filing cadences: annual, half-yearly, quarterly, monthly (stored as effective-dated policy)
 - EU cross-border flows: B2B reverse charge (sales and purchases), ESL / EU-sales obligation as a separate obligation stream (due by the 25th of the month following the period)
-- Non-EU flows: export zero-rating, import VAT; non-EU import goods assessment with Customs/Told integration
+- Non-EU flows: export zero-rating, import VAT; non-EU import goods assessment with Customs/Told data model (integration deferred post-MVP)
 - Domestic reverse charge under `Momsloven` §46
 - Effective-dated rule versioning — temporal legal correctness; `rule_version_id` pinned to every assessment
 - Two-layer data model: line-level facts + return-level aggregates with full linkage keys
-- Three-outcome claim model: `payable`, `refund`, `zero` — canonical claim payload dispatched to external system
+- Three-outcome claim model: `payable`, `refund`, `zero` — canonical claim payload recorded in internal settlement ledger
 - Business closure / final VAT return
 - Transfer of business (overdragelse) edge handling
 - Document and evidence retention (5-year minimum)
@@ -240,7 +243,7 @@ These capabilities are not primary flow nodes but are required for a complete pl
 - Real-time VAT balance
 - Split payment / PSP integration
 - Other tax types (corporate income tax, customs duties)
-- Full MitID OIDC production integration (stub in place)
+- External integrations in MVP (all run as internal stubs/adapters): MitID OIDC, SKAT TastSelv Erhverv, CVR/virk.dk, Skattekontoen, NemKonto, VIES, Customs/Told
 - OSS (One Stop Shop) — B2C cross-border EU supplies above EUR 10,000; not in scope for this version
 - EU SME VAT exemption scheme — businesses below ~DKK 744,750 EU turnover; not in scope for this version
 - Audit-triggered reassessment and dispute litigation (case-management integration only; not automated determination)
@@ -257,7 +260,9 @@ These capabilities are not primary flow nodes but are required for a complete pl
 
 ---
 
-## 8. Integration Points
+## 8. Integration Points (Post-MVP Target State)
+
+MVP policy: no external integrations. The items below define the target-state adapter boundaries that remain stubbed in MVP.
 
 | Integration           | Purpose                                                                  |
 |-----------------------|--------------------------------------------------------------------------|
@@ -273,13 +278,13 @@ These capabilities are not primary flow nodes but are required for a complete pl
 
 ## 9. Success Criteria
 
-- A business can register, receive an obligation, file a return, have it validated and assessed, and receive payment/refund confirmation — end to end
+- A business can register, receive an obligation, file a return, have it validated and assessed, and receive internal payable/refund/zero outcome confirmation — end to end
 - Every VAT rule applied is traceable to Danish law or SKAT guidance
-- Filing deadlines and late-filing consequences are correctly modelled for all three settlement frequencies
+- Filing deadlines and late-filing consequences are correctly modelled for all four settlement frequencies
 - A zero-return can be filed for a period with no activity
 - An amendment to a prior period return produces a correct delta and routes to audit
-- A negative net VAT position generates a claim and payout
-- An EU B2B sale is correctly zero-rated, reverse-charged, and reported in the ESL
+- A negative net VAT position generates a claim and simulated payout state
+- An EU B2B sale is correctly zero-rated, reverse-charged, and produces the correct ESL reporting payload
 - A complete period audit package can be reconstructed from stored data alone
 - All data retained for minimum 5 years (`Bogføringsloven` §12)
 

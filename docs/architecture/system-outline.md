@@ -4,12 +4,13 @@ Purpose
 - A single, authoritative document describing system architecture, user journeys, API surface, data model, integrations, security, testing, and operational runbooks for the Danish VAT registration product.
 
 Scope
-- Covers core user flows: obligation assessment, application drafting, validation, submission to SKAT, corrections/claims, and auditing.
+- Covers core user flows: obligation assessment, application drafting, validation, internal submission/claim processing, corrections/claims, and auditing.
 - Links to implementation artifacts in `docs/architecture`, `api`, and `database`.
 - Treats `applications` + queued submission as canonical MVP runtime; treats `filings` orchestration endpoints as proposed target-state extensions.
+- MVP uses internal adapter stubs only; live external integrations are post-MVP.
 
 High-level overview
-- Users authenticate with MitID, may prefill data from CVR, complete a short questionnaire to assess VAT obligation, fill and upload required documents, validate using the legal ruleset, then submit to SKAT (or produce signed payload/PDF for manual submission). The system tracks lifecycle and produces post-registration tasks.
+- In MVP, users authenticate via internal auth and use stubbed adapters for identity/prefill/submission boundaries. They complete a short questionnaire to assess VAT obligation, fill and upload required documents, validate using the legal ruleset, then submit into an internal queue/ledger. The system tracks lifecycle and produces post-registration tasks.
 
 Container runtime (ADR-011)
 - The entire platform runs in Docker; no local tool installs required beyond Docker.
@@ -26,10 +27,10 @@ Container runtime (ADR-011)
 
 User workflows (seven steps)
 1. Assessment: call the obligation engine; receive decision and citations.
-2. Identity and Organisation: MitID OIDC, CVR lookup, link accounts.
+2. Identity and Organisation: internal auth, CVR adapter stub, link accounts.
 3. Draft Application: create/modify application; upload documents.
 4. Validate: server-side legal ruleset run; present warnings/errors with citations.
-5. Submit: queue or send to SKAT adapter; store submission payload and SKAT response.
+5. Submit: queue in internal submission ledger; store submission payload and internal acknowledgement/processing states.
 6. Post-Submission: track status, handle follow-ups or info requests.
 7. Post-Registration: produce compliance checklist and reminders.
 
@@ -37,11 +38,11 @@ Minimal API surface (summary)
 - Auth: `POST /api/v1/auth/oidc/initiate`, `POST /api/v1/auth/oidc/callback`
 - Organisation: `GET /api/v1/organisations?cvr={cvr}`
 - Obligation: `POST /api/v1/assess/obligation`
-- Applications: `POST /api/v1/applications`, `GET /api/v1/applications/{id}`, `PUT /api/v1/applications/{id}`
-- Documents: `POST /api/v1/applications/{id}/documents`, `GET /api/v1/applications/{id}/documents/{docId}`
-- Validation: `POST /api/v1/applications/{id}/validate`, `GET /api/v1/validation/rulesets`
-- Submissions: `POST /api/v1/applications/{id}/submit`, `GET /api/v1/submissions/{submissionId}/status`
-- Corrections and Claims: `POST /api/v1/applications/{id}/corrections`, `POST /api/v1/applications/{id}/claims`
+- Applications: `POST /api/v1/applications`, `GET /api/v1/applications/{applicationId}`, `PUT /api/v1/applications/{applicationId}`
+- Documents: `POST /api/v1/applications/{applicationId}/documents`, `GET /api/v1/applications/{applicationId}/documents/{docId}`
+- Validation: `POST /api/v1/applications/{applicationId}/validate`, `GET /api/v1/validation/rulesets`
+- Submissions: `POST /api/v1/applications/{applicationId}/submit`, `GET /api/v1/submissions/{submissionId}/status`
+- Corrections and Claims: `POST /api/v1/applications/{applicationId}/corrections`, `POST /api/v1/applications/{applicationId}/claims`
 - Filings and Claims (proposed target state): `POST /api/v1/filings`, `GET /api/v1/filings/{filingId}`, `POST /api/v1/filings/{filingId}/amendments`, `POST /api/v1/claims`
 - Admin queue: `GET /api/v1/queue/queued-submissions`, `POST /api/v1/submissions/{submissionId}/retry`
 - Audit: `GET /api/v1/audit?objectType=VATApplication&objectId={id}`

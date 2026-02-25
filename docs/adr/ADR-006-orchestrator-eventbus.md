@@ -7,8 +7,8 @@ Context
 - Flows are long-running, require retries, durable state, auditable events, and integration with external systems (ERP, Claims system).
 
 Decision
-- Introduce a lightweight Orchestrator service (e.g., Durable Functions, Temporal, or a workflow engine) to coordinate long-running stateful workflows.
-- Introduce an Event Bus (Azure Service Bus / Event Grid / Kafka) for async integration between components and to capture all business events for audit/reporting.
+- Introduce a lightweight Orchestrator service (e.g., Temporal or another workflow engine) to coordinate long-running stateful workflows.
+- Introduce an Event Bus (Kafka, NATS, or RabbitMQ) for async integration between components and to capture all business events for audit/reporting.
 - Introduce a Rules Engine module (versioned rule artifacts) used by the `Tax Core Engine` to evaluate tax rules and produce assessments.
 
 Consequences
@@ -32,4 +32,4 @@ Recommended next steps
 3. Add observability requirements (correlation, tracing, metrics) to the principal services.
 
 References
-- ADR-003-azure-managed-services.md (consider Azure Service Bus / Durable Functions)
+- ADR-003-vendor-managed-services-deprecated.md (historical context; superseded by ADR-011)

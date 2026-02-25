@@ -11,22 +11,22 @@ export declare class DocumentsController {
     }>;
     list(applicationId: string, req: any): Promise<{
         id: string;
-        createdAt: Date;
         filename: string | null;
         contentType: string | null;
-        checksum: string | null;
         storagePath: string | null;
+        checksum: string | null;
         meta: import("@prisma/client/runtime/client").JsonValue | null;
+        createdAt: Date;
         ownerApplicationId: string;
     }[]>;
     findOne(applicationId: string, documentId: string, req: any): Promise<{
         id: string;
-        createdAt: Date;
         filename: string | null;
         contentType: string | null;
-        checksum: string | null;
         storagePath: string | null;
+        checksum: string | null;
         meta: import("@prisma/client/runtime/client").JsonValue | null;
+        createdAt: Date;
         ownerApplicationId: string;
     }>;
 }

@@ -45,7 +45,7 @@ export class DocumentsService {
       },
     });
 
-    // In production this would return a presigned URL from Azure Blob / S3.
+    // In production this would return a presigned URL from an S3-compatible object store.
     // For now we return the document record and a placeholder uploadUrl.
     const storageBaseUrl = this.config.get<string>(
       'BLOB_STORAGE_URL',

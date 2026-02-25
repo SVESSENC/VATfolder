@@ -1,30 +1,37 @@
----
-title: Orchestrator + Event Bus Architecture (Proposed Target State)
----
+# 06 Drill-Down: MVP-to-Post-MVP Integration Evolution
 
-This diagram represents a proposed future architecture (ADR-006, status: Proposed), not the canonical MVP runtime.
+This diagram shows how integration boundaries evolve from internal stubs in MVP to live connectors post-MVP.
 
 ```mermaid
 flowchart LR
-  subgraph UI
-    A[Taxpayer or Representative]
-    B[Self-Service Portal UI]
-    C[Portal BFF]
-    A --> B --> C
+  subgraph MVP[MVP Runtime]
+    API[VAT Core API]
+    Q[Redis/BullMQ]
+    W[Worker]
+    STUB[Adapter Stubs\nMitID/CVR/SKAT/VIES/NemKonto/Customs]
+    API --> Q --> W --> STUB
   end
 
-  C --> D[Tax Core API Layer]
-  D --> E[Orchestrator Service]
-  E --> F[Validation Service]
-  E --> G[Tax Core Engine\n(Rules Engine)]
+  subgraph POST[Post-MVP Runtime]
+    API2[VAT Core API]
+    ORCH[Orchestrator]
+    BUS[(Event Bus)]
+    IDP[MitID]
+    CVR[CVR/Virk]
+    SKAT[SKAT TastSelv]
+    PAY[Skattekontoen/NemKonto]
+    EU[VIES]
+    CUST[Customs/Told]
+    API2 --> ORCH
+    API2 --> BUS
+    ORCH --> BUS
+    BUS --> IDP
+    BUS --> CVR
+    BUS --> SKAT
+    BUS --> PAY
+    BUS --> EU
+    BUS --> CUST
+  end
 
-  D -->|publishes| EB[(Event Bus)]
-  E -->|publishes| EB
-  F -->|publishes| EB
-  G -->|publishes| EB
-
-  EB --> H[Audit Sink\n(append-only store)]
-  EB --> I[Audit and Reporting]
-  EB --> J[External Claims System Connector]
-  EB --> K[ERP or Bookkeeping Connector]
+  MVP -. same adapter contracts .-> POST
 ```

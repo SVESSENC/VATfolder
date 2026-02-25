@@ -1,28 +1,30 @@
-# Submission Sequence Diagram
+# 03 Drill-Down: Application Submission and Processing (MVP)
 
 ```mermaid
 sequenceDiagram
   participant User
-  participant FE as Web App
-  participant API as Backend API
+  participant FE as Portal UI
+  participant API as VAT Core API
   participant DB as PostgreSQL
-  participant Q as Redis Queue
-  participant W as Submission Worker
-  participant SKAT as SKAT/Virk
+  participant Q as Redis/BullMQ
+  participant W as Worker
+  participant STUB as SKAT Adapter Stub
 
-  User->>FE: Complete VAT form and submit
-  FE->>API: POST /api/v1/applications/{id}/submit
-  API->>DB: Persist submission intent + audit event
+  User->>FE: Submit VAT application
+  FE->>API: POST /api/v1/applications/{applicationId}/submit
+  API->>DB: Persist submission intent
+  API->>DB: Persist audit event
   API->>Q: Enqueue submission job
   API-->>FE: 202 Accepted (queued)
 
   W->>Q: Dequeue job
-  W->>SKAT: Send signed payload
-  alt Success
-    SKAT-->>W: Confirmation + reference
-    W->>DB: Update status=Submitted, store SKAT reference
-    W->>DB: Append immutable audit event
-  else Temporary failure
+  W->>STUB: Process submission via adapter stub
+  alt Accepted by internal processing
+    STUB-->>W: Internal acknowledgement
+    W->>DB: Update submission status
+    W->>DB: Append audit event
+  else Processing failure
+    STUB-->>W: Error details
     W->>Q: Retry with backoff
     W->>DB: Append failure audit event
   end

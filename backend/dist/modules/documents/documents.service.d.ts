@@ -14,22 +14,22 @@ export declare class DocumentsService {
     }>;
     findOne(applicationId: string, documentId: string, userId: string): Promise<{
         id: string;
-        createdAt: Date;
         filename: string | null;
         contentType: string | null;
-        checksum: string | null;
         storagePath: string | null;
+        checksum: string | null;
         meta: import("@prisma/client/runtime/client").JsonValue | null;
+        createdAt: Date;
         ownerApplicationId: string;
     }>;
     listForApplication(applicationId: string, userId: string): Promise<{
         id: string;
-        createdAt: Date;
         filename: string | null;
         contentType: string | null;
-        checksum: string | null;
         storagePath: string | null;
+        checksum: string | null;
         meta: import("@prisma/client/runtime/client").JsonValue | null;
+        createdAt: Date;
         ownerApplicationId: string;
     }[]>;
 }

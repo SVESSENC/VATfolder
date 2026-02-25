@@ -1,6 +1,6 @@
 **Overview**
 
-This document describes a practical, buildable system for supporting the main steps of Danish VAT (moms) registration and immediate post-registration obligations. It focuses on a minimal-complexity design that meets legal traceability, supports MitID authentication, and is extensible for SKAT/Virk integrations.
+This document describes a practical, buildable system for supporting the main steps of Danish VAT (moms) registration and immediate post-registration obligations. It focuses on a minimal-complexity design that meets legal traceability and uses integration adapter stubs in MVP, with live MitID/SKAT/Virk integrations deferred to post-MVP.
 
 **Quick start (containerized)**
 
@@ -21,20 +21,20 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 | http://localhost:9001 | MinIO web console (dev only) |
 
 **Assumptions**
-- Legal and API specifics (SKAT/Virk endpoints, required payloads) will be validated by `researcher` before implementation.
-- Users will authenticate with MitID (business/corporate flows where applicable). Confirm MitID product and scope with `researcher` and integrations.
-- CVR and company data will be used for pre-fill via public CVR APIs where permitted.
+- Legal and API specifics (SKAT/Virk endpoints, required payloads) will be validated by `researcher` before post-MVP integration rollout.
+- MVP authentication uses internal auth and adapter stubs; live MitID business/corporate flow is post-MVP.
+- MVP CVR prefill uses an internal adapter stub; live CVR lookup is post-MVP.
 - This document follows tech-stack.md as source of truth.
 - Canonical MVP runtime follows modular monolith plus outbox plus Redis/BullMQ worker flow (ADR-002, ADR-010).
 - Orchestrator/Event Bus expansion is documented as proposed target state (ADR-006, status: Proposed).
 
 **User workflow (high-level steps mapped to registration tasks)**
 1. Validate need to register: present short questionnaire to determine VAT obligation.
-2. Collect and verify identity and business data: MitID auth plus CVR lookup plus supplemental form fields.
+2. Collect and verify identity and business data: internal auth plus CVR adapter stub plus supplemental form fields.
 3. Gather required documents and selections: registration type, start date, special schemes (OSS, reverse charge), contact details.
 4. Validate data client-side and server-side using legal rules (`researcher` provides ruleset).
-5. Submit application: either via direct SKAT/Virk API or generate signed payload/PDF for manual submission.
-6. Track submission status and store SKAT responses (confirmation, registration number, follow-up requests).
+5. Submit application: store canonical submission payload in internal submission ledger/queue (no external dispatch in MVP).
+6. Track submission status and store internal acknowledgement and processing states.
 7. Post-registration: generate compliance checklist, first-period filing reminders, and bookkeeping hints.
 
 **System components**
@@ -47,12 +47,12 @@ _Infrastructure (Docker containers — see `docker-compose.yml`)_
 _Application (Docker containers — custom images with multi-stage builds)_
 - Frontend (SPA) — Vite + React + TypeScript: registration forms, status dashboard, wizard flow.
 - Backend API — NestJS on Node.js 22 LTS: business logic, validation, integration adapters; Swagger at `/api/docs`.
-- Auth layer — MitID OIDC connector plus JWT/RBAC for internal users.
+- Auth layer — JWT/RBAC for internal users in MVP; MitID OIDC connector remains as post-MVP adapter boundary.
 - Queue and async processing (canonical MVP) — BullMQ worker flow with outbox pattern (Redis-backed).
 - Event bus and dedicated orchestrator (proposed target state) — deferred until ADR-006 is accepted.
 
 _Cross-cutting_
-- Integration adapters — modular connectors for MitID auth, CVR lookup, SKAT/Virk submission, e-mail/e-Boks notifications.
+- Integration adapters — modular connector boundaries for MitID auth, CVR lookup, SKAT/Virk submission, e-mail/e-Boks notifications; all run as stubs in MVP.
 - Audit and logging — append-only AuditEvent records and structured logs (OpenTelemetry + Loki).
 - Monitoring and alerting — health endpoints, submit-queue depth, and SLA alerts.
 
@@ -67,19 +67,22 @@ _Cross-cutting_
 - POST /api/v1/applications
   - Request: application payload plus attachment refs
   - Response: application id, validation warnings
-- GET /api/v1/applications/{id}
+- GET /api/v1/applications/{applicationId}
   - Response: full state, status, SKAT_reference if available
-- POST /api/v1/applications/{id}/submit
+- POST /api/v1/applications/{applicationId}/submit
   - Response: submission result or queued status
 - POST /api/v1/filings
   - Response: 202 accepted for extended filing workflow (proposed target-state contract)
+- POST /api/v1/claims
+  - Response: 202 accepted for extended claim workflow (proposed target-state contract)
 
 Full contract schemas are defined in `docs/architecture/filing-api-contract.md` and validated by `researcher` for required fields.
 
 **Integrations**
-- MitID: OIDC flows for user authentication and business authentication. Confirm required scopes and enterprise flows.
-- CVR API: pre-fill business data and validate CVR existence.
-- SKAT/Virk: final submission endpoint(s) - may be direct API or manual upload. `researcher` to confirm available endpoints and required security (e.g., certificate-based TLS/MTLS, signed payloads).
+- MVP integration policy: all external integrations are stubbed behind adapters.
+- MitID: OIDC flows for user authentication and business authentication (post-MVP rollout). Confirm required scopes and enterprise flows.
+- CVR API: pre-fill business data and validate CVR existence (post-MVP rollout).
+- SKAT/Virk: final submission endpoint(s) - may be direct API or manual upload (post-MVP rollout). `researcher` to confirm available endpoints and required security (e.g., certificate-based TLS/MTLS, signed payloads).
   - Webhook security: callbacks from SKAT must be validated using a signature header (for example `X-SKAT-Signature`) and a timestamp header (for example `X-SKAT-Timestamp`). Consumers must reject replayed requests outside an acceptable window and return 401/403 on signature failure.
 - e-Boks or email: delivery of confirmations and follow-ups.
 
@@ -96,7 +99,7 @@ Full contract schemas are defined in `docs/architecture/filing-api-contract.md` 
 
 **Testing strategy**
 - Unit tests for components and validation rules.
-- Integration tests including MitID (stubbed), CVR lookup (mock), and SKAT adapter (contract tests or sandbox where available).
+- Integration tests including MitID/CVR/SKAT adapter stubs in MVP, plus contract tests against live provider sandboxes in post-MVP hardening.
 - End-to-end tests for main registration flows using test users or MitID test environments.
 - Compliance regression: verify traceability of legal citations to reactions in the ruleset.
 
@@ -128,15 +131,15 @@ See `docker-compose.yml` (development) and `docker-compose.prod.yml` (production
 **Milestones and estimated timeline (conservative)**
 - Week 0-1: Research confirmation (legal endpoints, MitID scope) - `researcher` deliverables.
 - Week 2: Define user flows and acceptance criteria - `designer` plus `architect`.
-- Week 3-4: Implement core backend, DB schema, MitID auth, and basic frontend flow (MVP submission to queued adapter).
-- Week 5-6: Integrations with CVR and SKAT adapter (sandbox), document storage and audit.
+- Week 3-4: Implement core backend, DB schema, internal auth, and basic frontend flow (MVP submission to internal queued adapter).
+- Week 5-6: Harden stubbed adapter boundaries; optional provider sandbox exploration for post-MVP rollout.
 - Week 7: Testing (integration and E2E) and compliance review by `reviewer`.
 - Week 8: Harden, runbook, deploy to production-like environment and handover.
 
 **Acceptance criteria**
 - `researcher` confirms mapping of UI flows to legal requirements and provides validation ruleset.
-- User can complete registration flow end-to-end in sandbox (submit to receive confirmation or queued status).
-- All PII stored encrypted, audit trail present for all actions, MitID authentication enforced.
+- User can complete registration flow end-to-end in MVP (submit to receive internal confirmation or queued status).
+- All PII stored encrypted, audit trail present for all actions, and adapter boundaries ready for post-MVP MitID enforcement.
 - Reviewer sign-off on compliance-critical items.
 
 **Next actions (immediate)**
@@ -154,5 +157,5 @@ See `docker-compose.yml` (development) and `docker-compose.prod.yml` (production
 **Architecture decision log**
 - See docs/adr/README.md for ADR index and full records.
 - Accepted baseline: ADR-002-modular-monolith-first.md, ADR-007-api-versioning.md, ADR-008-auth-by-default.md, ADR-009-idempotency.md, ADR-010-canonical-stack.md, ADR-011-containerization.md.
-- ADR-003 (Azure Hosting) superseded by ADR-011.
+- ADR-003 (vendor-managed hosting baseline) superseded by ADR-011.
 - Proposed extension: ADR-006-orchestrator-eventbus.md.

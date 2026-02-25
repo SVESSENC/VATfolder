@@ -2,7 +2,7 @@
 
 - Date: 2026-02-25
 - Status: Accepted
-- Supersedes: ADR-003 (Azure Hosting with OSS Application Tooling)
+- Supersedes: ADR-003 (Vendor-Managed Hosting Baseline)
 
 ## Context
 
@@ -11,7 +11,7 @@ no tool (Node.js, PostgreSQL, Redis, etc.) needs to be installed on the develope
 local machine. Additionally, the platform must be built entirely on open-source
 components to avoid vendor lock-in with any specific cloud provider.
 
-ADR-003 had accepted Azure as the hosting platform. This decision is superseded:
+ADR-003 had accepted a vendor-managed hosting baseline. This decision is superseded:
 the application layer was already open-source; this ADR extends that principle to
 infrastructure choices and mandates Docker as the single runtime dependency.
 
@@ -22,15 +22,15 @@ infrastructure choices and mandates Docker as the single runtime dependency.
    beyond Docker Desktop (or Docker Engine).
 
 2. **All infrastructure services must have open-source equivalents:**
-   - Database: PostgreSQL 16 (replaces Azure Database for PostgreSQL)
+   - Database: PostgreSQL 16 (replaces vendor-managed PostgreSQL dependency)
    - Queue/cache: Redis 7 (unchanged)
-   - Blob storage: MinIO (replaces Azure Blob Storage; S3-compatible API)
+   - Blob storage: MinIO (replaces vendor-specific blob storage dependency; S3-compatible API)
    - Container orchestration: Docker Compose (dev) / Kubernetes or any OCI-compatible
-     platform (production) — not tied to Azure Container Apps
+     platform (production) — not tied to a provider-specific container runtime
 
 3. **Cloud neutrality:** The platform may be deployed on any cloud that offers
    managed PostgreSQL, Redis, and S3-compatible storage, or fully self-hosted.
-   Azure remains a valid deployment target but is no longer the only or preferred one.
+   No provider is preferred.
 
 4. **Multi-stage Dockerfiles** are used for both `backend` (NestJS) and `frontend`
    (React/Vite → nginx) to support both a hot-reload development stage and an
@@ -51,7 +51,7 @@ infrastructure choices and mandates Docker as the single runtime dependency.
 
 | Option | Rejected because |
 |--------|-----------------|
-| Azure-only managed services (ADR-003) | Cloud lock-in; requires Azure subscription even for local dev |
+| Provider-specific managed services (ADR-003) | Cloud lock-in; requires provider account even for local dev |
 | Bare-metal local installs | Each developer must manage their own Postgres/Redis versions |
 | Dev Containers / Codespaces only | Less flexible; still requires VS Code and a specific remote target |
 

@@ -1,6 +1,6 @@
 # Filing / Amendment / Claim API Contract (Proposed Target State)
 
-This contract describes the extended orchestrated filing model. The canonical MVP flow remains the `applications` submit workflow.
+This contract describes the extended orchestrated filing model. The canonical MVP flow remains the `applications` submit workflow with internal processing only (no live external integrations in MVP).
 
 Common headers
 - `X-Correlation-ID`: UUID for tracing the end-to-end request.
